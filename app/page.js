@@ -1,668 +1,250 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { useAuth } from "./components/AuthProvider";
-import Sidebar from "./components/Sidebar";
-import LoginPage from "./login/page";
+import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
-export default function Home() {
-  const { user, loading: authLoading, signOut } = useAuth();
+export default function Sidebar({
+  chats,
+  activeChatId,
+  onSelectChat,
+  onNewChat,
+  onSignOut,
+  userName,
+  isOpen,
+  onToggle,
+}) {
+  const [newChatName, setNewChatName] = useState("");
+  const [showNewChat, setShowNewChat] = useState(false);
 
-  // Chat state
-  const [chats, setChats] = useState([]);
-  const [activeChatId, setActiveChatId] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
+  const brainstormChat = chats.find((c) => c.chat_type === "brainstorm");
+  const essayChats = chats.filter((c) => c.chat_type !== "brainstorm");
 
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
-
-  // Scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
-  // Load chats when user logs in
-  useEffect(() => {
-    if (!user) return;
-    loadChats();
-  }, [user]);
-
-  // Load messages when active chat changes
-  useEffect(() => {
-    if (!activeChatId) return;
-    loadMessages(activeChatId);
-  }, [activeChatId]);
-
-  const loadChats = async () => {
-    setInitialLoading(true);
-    const { data, error } = await supabase
-      .from("chats")
-      .select("*")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("Error loading chats:", error);
-      setInitialLoading(false);
-      return;
-    }
-
-    setChats(data || []);
-
-    // Auto-select brainstorm chat
-    const brainstorm = data?.find((c) => c.chat_type === "brainstorm");
-    if (brainstorm && !activeChatId) {
-      setActiveChatId(brainstorm.id);
-    }
-    setInitialLoading(false);
+  const handleCreateChat = async () => {
+    const title = newChatName.trim() || "New Essay";
+    await onNewChat(title);
+    setNewChatName("");
+    setShowNewChat(false);
   };
-
-  const loadMessages = async (chatId) => {
-    const { data, error } = await supabase
-      .from("messages")
-      .select("*")
-      .eq("chat_id", chatId)
-      .order("created_at", { ascending: true });
-
-    if (error) {
-      console.error("Error loading messages:", error);
-      return;
-    }
-
-    setMessages(
-      (data || []).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }))
-    );
-  };
-
-  const saveMessage = async (chatId, role, content) => {
-    const { error } = await supabase.from("messages").insert({
-      chat_id: chatId,
-      role,
-      content,
-    });
-    if (error) console.error("Error saving message:", error);
-  };
-
-  const handleNewChat = async (title) => {
-    const { data, error } = await supabase
-      .from("chats")
-      .insert({
-        user_id: user.id,
-        chat_type: "essay",
-        title,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      console.error("Error creating chat:", error);
-      return;
-    }
-
-    setChats((prev) => [...prev, data]);
-    setActiveChatId(data.id);
-    setSidebarOpen(false);
-  };
-
-  const sendMessage = async () => {
-    if (!input.trim() || loading || !activeChatId) return;
-
-    const userMessage = { role: "user", content: input.trim() };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
-    setInput("");
-    setLoading(true);
-
-    // Save user message to Supabase
-    await saveMessage(activeChatId, "user", userMessage.content);
-
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to get response");
-      }
-
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let assistantMessage = "";
-      let buffer = "";
-
-      setMessages([...updatedMessages, { role: "assistant", content: "" }]);
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            if (data === "[DONE]") continue;
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.text) {
-                assistantMessage += parsed.text;
-                setMessages([
-                  ...updatedMessages,
-                  { role: "assistant", content: assistantMessage },
-                ]);
-              }
-            } catch (e) {}
-          }
-        }
-      }
-
-      // Save assistant message to Supabase
-      if (assistantMessage) {
-        await saveMessage(activeChatId, "assistant", assistantMessage);
-      }
-    } catch (err) {
-      const errorMsg = "Something went wrong. Try again in a moment.";
-      setMessages([
-        ...updatedMessages,
-        { role: "assistant", content: errorMsg },
-      ]);
-    }
-
-    setLoading(false);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-  };
-
-  // Get active chat info
-  const activeChat = chats.find((c) => c.id === activeChatId);
-  const chatTitle = activeChat?.title || "Brainstorm";
-  const chatSubtitle =
-    activeChat?.chat_type === "brainstorm"
-      ? "UC Essay Coach"
-      : "Essay Workshop";
-
-  // Auth loading state
-  if (authLoading) {
-    return (
-      <div
-        style={{
-          height: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          background: "#0a0a0b",
-          color: "#71717a",
-          fontSize: "14px",
-        }}
-      >
-        Loading...
-      </div>
-    );
-  }
-
-  // Not logged in - show login
-  if (!user) {
-    return <LoginPage />;
-  }
 
   return (
-    <div
-      style={{
-        height: "100vh",
-        display: "flex",
-        background: "#0a0a0b",
-        fontFamily:
-          "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
-        color: "#e4e4e7",
-      }}
-    >
-      {/* Sidebar */}
-      <Sidebar
-        chats={chats}
-        activeChatId={activeChatId}
-        onSelectChat={(id) => {
-          setActiveChatId(id);
-          setSidebarOpen(false);
-        }}
-        onNewChat={handleNewChat}
-        onSignOut={signOut}
-        userName={user.user_metadata?.name || user.email}
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+    <>
+      {isOpen && (
+        <div
+          onClick={onToggle}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.5)",
+            zIndex: 40,
+            display: "none",
+          }}
+          className="mobile-overlay"
+        />
+      )}
 
-      {/* Main chat area */}
       <div
         style={{
-          flex: 1,
+          width: "260px",
+          height: "100vh",
+          background: "#0f0f11",
+          borderRight: "1px solid #1e1e22",
           display: "flex",
           flexDirection: "column",
-          minWidth: 0,
+          flexShrink: 0,
+          position: isOpen ? "fixed" : "relative",
+          zIndex: 50,
+          transform: isOpen ? "translateX(0)" : undefined,
+          transition: "transform 0.2s ease",
         }}
       >
-        {/* Top bar */}
+        <div style={{ padding: "16px", borderBottom: "1px solid #1e1e22" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+            <div
+              style={{
+                width: "32px",
+                height: "32px",
+                borderRadius: "8px",
+                background: "linear-gradient(135deg, #22c55e, #16a34a)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                fontSize: "11px",
+                fontWeight: "700",
+                color: "#fff",
+              }}
+            >
+              Ted
+            </div>
+            <div style={{ fontSize: "14px", fontWeight: "600", color: "#f4f4f5" }}>
+              accepted.bot
+            </div>
+          </div>
+
+          <button
+            onClick={() => setShowNewChat(!showNewChat)}
+            style={{
+              width: "100%",
+              padding: "10px",
+              background: "#1e1e22",
+              border: "1px solid #2e2e33",
+              color: "#a1a1aa",
+              borderRadius: "8px",
+              fontSize: "13px",
+              cursor: "pointer",
+              fontWeight: "500",
+              textAlign: "left",
+            }}
+          >
+            + New Essay Chat
+          </button>
+
+          {showNewChat && (
+            <div style={{ marginTop: "8px", display: "flex", gap: "6px" }}>
+              <input
+                value={newChatName}
+                onChange={(e) => setNewChatName(e.target.value)}
+                placeholder="e.g. UC1 Leadership"
+                onKeyDown={(e) => e.key === "Enter" && handleCreateChat()}
+                style={{
+                  flex: 1,
+                  padding: "8px 10px",
+                  background: "#1a1a1d",
+                  border: "1px solid #2e2e33",
+                  color: "#e4e4e7",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  outline: "none",
+                }}
+              />
+              <button
+                onClick={handleCreateChat}
+                style={{
+                  padding: "8px 12px",
+                  background: "#22c55e",
+                  border: "none",
+                  color: "#fff",
+                  borderRadius: "6px",
+                  fontSize: "12px",
+                  cursor: "pointer",
+                  fontWeight: "600",
+                }}
+              >
+                Go
+              </button>
+            </div>
+          )}
+        </div>
+<div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+          {brainstormChat && (
+            <button
+              onClick={() => onSelectChat(brainstormChat.id)}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                background: activeChatId === brainstormChat.id ? "#1e1e22" : "transparent",
+                border: activeChatId === brainstormChat.id ? "1px solid #2e2e33" : "1px solid transparent",
+                color: activeChatId === brainstormChat.id ? "#22c55e" : "#a1a1aa",
+                borderRadius: "8px",
+                fontSize: "13px",
+                cursor: "pointer",
+                textAlign: "left",
+                fontWeight: activeChatId === brainstormChat.id ? "600" : "400",
+                marginBottom: "4px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
+              Brainstorm
+            </button>
+          )}
+
+          {essayChats.length > 0 && (
+            <div
+              style={{
+                fontSize: "10px",
+                color: "#52525b",
+                textTransform: "uppercase",
+                letterSpacing: "0.05em",
+                padding: "12px 12px 6px",
+                fontWeight: "600",
+              }}
+            >
+              Essays
+            </div>
+          )}
+
+          {essayChats.map((chat) => (
+            <button
+              key={chat.id}
+              onClick={() => onSelectChat(chat.id)}
+              style={{
+                width: "100%",
+                padding: "10px 12px",
+                background: activeChatId === chat.id ? "#1e1e22" : "transparent",
+                border: activeChatId === chat.id ? "1px solid #2e2e33" : "1px solid transparent",
+                color: activeChatId === chat.id ? "#22c55e" : "#a1a1aa",
+                borderRadius: "8px",
+                fontSize: "13px",
+                cursor: "pointer",
+                textAlign: "left",
+                fontWeight: activeChatId === chat.id ? "600" : "400",
+                marginBottom: "2px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {chat.title || "Untitled Essay"}
+            </button>
+          ))}
+        </div>
+
         <div
           style={{
-            padding: "14px 24px",
-            borderBottom: "1px solid #1e1e22",
+            padding: "12px 16px",
+            borderTop: "1px solid #1e1e22",
             display: "flex",
             alignItems: "center",
-            gap: "12px",
-            background: "#0f0f11",
+            justifyContent: "space-between",
           }}
         >
-          {/* Mobile hamburger */}
+          <div
+            style={{
+              fontSize: "12px",
+              color: "#71717a",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "160px",
+            }}
+          >
+            {userName || "Student"}
+          </div>
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={onSignOut}
             style={{
               background: "none",
               border: "none",
-              color: "#a1a1aa",
-              fontSize: "20px",
-              cursor: "pointer",
-              padding: "4px",
-              display: "none",
-            }}
-            className="mobile-menu-btn"
-          >
-            ☰
-          </button>
-
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background: "linear-gradient(135deg, #22c55e, #16a34a)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "14px",
-              fontWeight: "700",
-              color: "#fff",
-              letterSpacing: "-0.02em",
-              flexShrink: 0,
-            }}
-          >
-            Ted
-          </div>
-          <div>
-            <div
-              style={{
-                fontWeight: "600",
-                fontSize: "15px",
-                color: "#f4f4f5",
-              }}
-            >
-              {chatTitle}
-            </div>
-            <div
-              style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}
-            >
-              {chatSubtitle}
-            </div>
-          </div>
-        </div>
-
-        {/* Messages */}
-        <div
-          style={{
-            flex: 1,
-            overflowY: "auto",
-            padding: "24px",
-            display: "flex",
-            flexDirection: "column",
-            gap: "16px",
-            maxWidth: "800px",
-            width: "100%",
-            margin: "0 auto",
-          }}
-        >
-          {initialLoading ? (
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                color: "#71717a",
-                fontSize: "14px",
-              }}
-            >
-              Loading your chats...
-            </div>
-          ) : messages.length === 0 ? (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                flex: 1,
-                gap: "16px",
-                opacity: 0.6,
-              }}
-            >
-              <div
-                style={{
-                  width: "64px",
-                  height: "64px",
-                  borderRadius: "16px",
-                  background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "22px",
-                  fontWeight: "700",
-                  color: "#fff",
-                }}
-              >
-                Ted
-              </div>
-              <div
-                style={{
-                  fontSize: "20px",
-                  fontWeight: "600",
-                  color: "#f4f4f5",
-                }}
-              >
-                {chatTitle}
-              </div>
-              <div
-                style={{
-                  fontSize: "14px",
-                  color: "#71717a",
-                  textAlign: "center",
-                  maxWidth: "420px",
-                  lineHeight: "1.5",
-                }}
-              >
-                {activeChat?.chat_type === "brainstorm"
-                  ? "Your UC essay coach. Tell me about yourself and we'll find the stories that get you in."
-                  : `Let's work on your ${chatTitle} essay. Share your outline or draft when you're ready.`}
-              </div>
-
-              {activeChat?.chat_type === "brainstorm" && (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    justifyContent: "center",
-                    marginTop: "8px",
-                  }}
-                >
-                  {[
-                    "I'm applying to UCs this fall",
-                    "I'm a transfer student",
-                    "I already wrote some essays",
-                  ].map((s) => (
-                    <button
-                      key={s}
-                      onClick={() => {
-                        setInput(s);
-                        setTimeout(() => inputRef.current?.focus(), 0);
-                      }}
-                      style={{
-                        background: "#1e1e22",
-                        border: "1px solid #2e2e33",
-                        color: "#a1a1aa",
-                        padding: "8px 16px",
-                        borderRadius: "20px",
-                        fontSize: "13px",
-                        cursor: "pointer",
-                      }}
-                    >
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            messages.map((msg, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  justifyContent:
-                    msg.role === "user" ? "flex-end" : "flex-start",
-                  gap: "10px",
-                }}
-              >
-                {msg.role === "assistant" && (
-                  <div
-                    style={{
-                      width: "28px",
-                      height: "28px",
-                      borderRadius: "8px",
-                      background:
-                        "linear-gradient(135deg, #22c55e, #16a34a)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: "9px",
-                      fontWeight: "700",
-                      color: "#fff",
-                      flexShrink: 0,
-                      marginTop: "2px",
-                      letterSpacing: "-0.02em",
-                    }}
-                  >
-                    Ted
-                  </div>
-                )}
-                <div
-                  style={{
-                    maxWidth: "75%",
-                    padding: "12px 16px",
-                    borderRadius:
-                      msg.role === "user"
-                        ? "16px 16px 4px 16px"
-                        : "16px 16px 16px 4px",
-                    background:
-                      msg.role === "user" ? "#22c55e" : "#1e1e22",
-                    color: msg.role === "user" ? "#fff" : "#d4d4d8",
-                    fontSize: "14px",
-                    lineHeight: "1.6",
-                    whiteSpace: "pre-wrap",
-                    wordBreak: "break-word",
-                  }}
-                >
-                  {msg.content}
-                </div>
-              </div>
-            ))
-          )}
-
-          {loading && messages[messages.length - 1]?.role !== "assistant" && (
-            <div
-              style={{
-                display: "flex",
-                gap: "10px",
-                alignItems: "flex-start",
-              }}
-            >
-              <div
-                style={{
-                  width: "28px",
-                  height: "28px",
-                  borderRadius: "8px",
-                  background: "linear-gradient(135deg, #22c55e, #16a34a)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "9px",
-                  fontWeight: "700",
-                  color: "#fff",
-                  flexShrink: 0,
-                }}
-              >
-                Ted
-              </div>
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "16px 16px 16px 4px",
-                  background: "#1e1e22",
-                  display: "flex",
-                  gap: "6px",
-                  alignItems: "center",
-                }}
-              >
-                <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
-                <div
-                  style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: "#22c55e",
-                    animation: "pulse 1.2s ease-in-out infinite",
-                  }}
-                />
-                <div
-                  style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: "#22c55e",
-                    animation: "pulse 1.2s ease-in-out 0.3s infinite",
-                  }}
-                />
-                <div
-                  style={{
-                    width: "6px",
-                    height: "6px",
-                    borderRadius: "50%",
-                    background: "#22c55e",
-                    animation: "pulse 1.2s ease-in-out 0.6s infinite",
-                  }}
-                />
-              </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
-        </div>
-
-        {/* Input */}
-        <div
-          style={{
-            padding: "16px 24px 20px",
-            borderTop: "1px solid #1e1e22",
-            background: "#0f0f11",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              gap: "10px",
-              alignItems: "flex-end",
-              maxWidth: "800px",
-              margin: "0 auto",
-            }}
-          >
-            <textarea
-              ref={inputRef}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Talk to Ted..."
-              rows={1}
-              style={{
-                flex: 1,
-                background: "#1e1e22",
-                border: "1px solid #2e2e33",
-                color: "#e4e4e7",
-                padding: "12px 16px",
-                borderRadius: "14px",
-                fontSize: "14px",
-                lineHeight: "1.5",
-                resize: "none",
-                outline: "none",
-                fontFamily: "inherit",
-                minHeight: "44px",
-                maxHeight: "120px",
-              }}
-              onFocus={(e) => (e.target.style.borderColor = "#22c55e")}
-              onBlur={(e) => (e.target.style.borderColor = "#2e2e33")}
-              onInput={(e) => {
-                e.target.style.height = "44px";
-                e.target.style.height =
-                  Math.min(e.target.scrollHeight, 120) + "px";
-              }}
-            />
-            <button
-              onClick={sendMessage}
-              disabled={!input.trim() || loading}
-              style={{
-                background:
-                  !input.trim() || loading
-                    ? "#1e1e22"
-                    : "linear-gradient(135deg, #22c55e, #16a34a)",
-                border: "none",
-                color: !input.trim() || loading ? "#52525b" : "#fff",
-                width: "44px",
-                height: "44px",
-                borderRadius: "12px",
-                cursor: !input.trim() || loading ? "default" : "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="22" y1="2" x2="11" y2="13" />
-                <polygon points="22 2 15 22 11 13 2 9 22 2" />
-              </svg>
-            </button>
-          </div>
-          <div
-            style={{
-              textAlign: "center",
+              color: "#52525b",
               fontSize: "11px",
-              color: "#3f3f46",
-              marginTop: "10px",
+              cursor: "pointer",
+              padding: "4px 8px",
             }}
           >
-            accepted.bot — powered by Statement Guru methodology
-          </div>
+            Sign out
+          </button>
         </div>
       </div>
 
-      {/* Mobile responsive styles */}
       <style>{`
         @media (max-width: 768px) {
-          .mobile-menu-btn { display: block !important; }
+          .mobile-overlay { display: block !important; }
         }
       `}</style>
-    </div>
+    </>
   );
 }
