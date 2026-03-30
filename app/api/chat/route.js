@@ -1,5 +1,30 @@
+import { createClient } from "@supabase/supabase-js";
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  { auth: { persistSession: false } }
+);
+
 export async function POST(req) {
-  const { messages } = await req.json();
+  const { messages, userId } = await req.json();
+
+  // Load student profile from Supabase
+  let studentProfile = {};
+  if (userId) {
+    const { data } = await supabase
+      .from("profiles")
+      .select("student_profile")
+      .eq("id", userId)
+      .single();
+    if (data?.student_profile) {
+      studentProfile = data.student_profile;
+    }
+  }
+
+  const profileContext = Object.keys(studentProfile).length > 0
+    ? `\n\nSTUDENT PROFILE (what you already know about this student — do NOT re-ask any of this):\n${JSON.stringify(studentProfile, null, 2)}`
+    : "";
 
   const systemPrompt = `Your name is Ted. You introduce yourself as Ted in your first message. You are the AI essay coach behind accepted.bot. You were built by Nived Ravikumar, a Hollywood-trained screenwriter turned admissions essay expert with 16 years of experience. Your methodology treats every admissions essay as a "mini movie" and every applicant as the star of their own story.
 
@@ -53,7 +78,6 @@ BRAINSTORMING:
 - Best topics surface from casual mentions — things students don't think are "important enough."
 
 FRESHNESS FILTER: Applies to the PORTFOLIO as a whole. Conventional topics are often RIGHT if they free up other slots. Don't downplay a student's idea just because it's conventional.
-
 OUTLINE QUALITY — CRITICAL:
 Outlines must be PERSONALIZED CREATIVE BRIEFS, not structural summaries.
 
@@ -102,7 +126,7 @@ UNIVERSAL PRINCIPLES:
 7. Openings almost always too long
 8. Preserve voice over polish
 9. Motivation is a multiplier
-10. Portfolio is an ensemble — four dimensions of one person`;
+10. Portfolio is an ensemble — four dimensions of one person${profileContext}`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
@@ -121,6 +145,8 @@ UNIVERSAL PRINCIPLES:
   });
 
   const encoder = new TextEncoder();
+  let fullResponse = "";
+
   const stream = new ReadableStream({
     async start(controller) {
       const reader = response.body.getReader();
@@ -142,15 +168,9 @@ UNIVERSAL PRINCIPLES:
               if (data === "[DONE]") continue;
               try {
                 const parsed = JSON.parse(data);
-                if (
-                  parsed.type === "content_block_delta" &&
-                  parsed.delta?.type === "text_delta"
-                ) {
-                  controller.enqueue(
-                    encoder.encode(
-                      `data: ${JSON.stringify({ text: parsed.delta.text })}\n\n`
-                    )
-                  );
+                if (parsed.type === "content_block_delta" && parsed.delta?.type === "text_delta") {
+                  fullResponse += parsed.delta.text;
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: parsed.delta.text })}\n\n`));
                 }
               } catch (e) {}
             }
@@ -161,10 +181,14 @@ UNIVERSAL PRINCIPLES:
       } finally {
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
         controller.close();
+
+        // After streaming is done, extract profile updates in the background
+        if (userId && fullResponse) {
+          updateStudentProfile(userId, messages, fullResponse, studentProfile);
+        }
       }
     },
   });
-
   return new Response(stream, {
     headers: {
       "Content-Type": "text/event-stream",
@@ -172,4 +196,49 @@ UNIVERSAL PRINCIPLES:
       Connection: "keep-alive",
     },
   });
+}
+
+async function updateStudentProfile(userId, messages, assistantResponse, currentProfile) {
+  try {
+    const recentMessages = messages.slice(-6);
+    const convoSnippet = recentMessages.map((m) => `${m.role}: ${m.content}`).join("\n");
+
+    const extractionResponse = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: `You extract student profile information from conversations. Given the current profile and recent conversation, return ONLY a JSON object with updated profile fields. Keep existing fields, add new ones, update changed ones. Use these field names when relevant: name, school, grade, freshman_or_transfer, major_interest, extracurriculars, interests, stories (array of brief story descriptions), strengths, challenges, deadline, essays_started, prompts_discussed. Only include fields you have information for. Return ONLY valid JSON, no explanation.`,
+        messages: [
+          {
+            role: "user",
+            content: `Current profile:\n${JSON.stringify(currentProfile)}\n\nRecent conversation:\n${convoSnippet}\n\nAssistant's latest response:\n${assistantResponse}`,
+          },
+        ],
+      }),
+    });
+
+    const extractionData = await extractionResponse.json();
+    const text = extractionData.content?.[0]?.text || "";
+    const cleaned = text.replace(/```json|```/g, "").trim();
+    const newProfile = JSON.parse(cleaned);
+
+    const merged = { ...currentProfile, ...newProfile };
+    if (Array.isArray(currentProfile.stories) && Array.isArray(newProfile.stories)) {
+      const allStories = [...currentProfile.stories, ...newProfile.stories];
+      merged.stories = [...new Set(allStories)];
+    }
+
+    await supabase
+      .from("profiles")
+      .update({ student_profile: merged })
+      .eq("id", userId);
+  } catch (err) {
+    console.error("Profile extraction error:", err);
+  }
 }
