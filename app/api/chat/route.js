@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
-  const { messages, userId } = await req.json();
+  const { messages, userId, chatType, chatTitle } = await req.json();
 
   // Load student profile from Supabase
   let studentProfile = {};
@@ -126,7 +126,9 @@ UNIVERSAL PRINCIPLES:
 7. Openings almost always too long
 8. Preserve voice over polish
 9. Motivation is a multiplier
-10. Portfolio is an ensemble — four dimensions of one person${profileContext}`;
+10. Portfolio is an ensemble — four dimensions of one person${profileContext}
+
+CHAT CONTEXT: ${chatType === "brainstorm" ? "This is the main BRAINSTORM chat. Build rapport, explore stories, map ideas to prompts." : `This is an ESSAY-SPECIFIC chat for: "${chatTitle}". The student already knows you from the brainstorm chat. Do NOT re-introduce yourself. Do NOT ask for their name or school. Jump straight into working on this essay using what you know from their profile.`}`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
