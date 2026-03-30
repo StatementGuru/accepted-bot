@@ -211,7 +211,7 @@ return (
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
         <div style={{ padding: "14px 24px", borderBottom: "1px solid #1e1e22", display: "flex", alignItems: "center", gap: "12px", background: "#0f0f11" }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#a1a1aa", fontSize: "20px", cursor: "pointer", padding: "4px", display: "none" }} className="mobile-menu-btn">
+          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#a1a1aa", fontSize: "20px", cursor: "pointer", padding: "4px", display: "block" }} className="mobile-menu-btn">
             ☰
           </button>
           <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: "700", color: "#fff", letterSpacing: "-0.02em", flexShrink: 0 }}>
