@@ -123,7 +123,7 @@ export default function Home() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages }),
+        body: JSON.stringify({ messages: updatedMessages, userId: user.id }),
       });
 
       if (!response.ok) throw new Error("Failed to get response");
