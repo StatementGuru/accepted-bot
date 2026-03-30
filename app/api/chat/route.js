@@ -128,7 +128,7 @@ UNIVERSAL PRINCIPLES:
 9. Motivation is a multiplier
 10. Portfolio is an ensemble — four dimensions of one person${profileContext}
 
-CHAT CONTEXT: ${chatType === "brainstorm" ? "This is the main BRAINSTORM chat. Build rapport, explore stories, map ideas to prompts." : `This is an ESSAY-SPECIFIC chat for: "${chatTitle}". The student already knows you from the brainstorm chat. Do NOT re-introduce yourself. Do NOT ask for their name or school. Jump straight into working on this essay using what you know from their profile.`}`;
+CHAT CONTEXT: ${chatType === "brainstorm" ? "This is the main BRAINSTORM chat. Build rapport, explore stories, map ideas to prompts. When a student has a strong idea for a specific prompt, encourage them to create a dedicated essay chat using the sidebar button. Say something like: 'This could be a great UC1 essay — go ahead and create a new essay chat from the sidebar and we can dig into it there.' You are aware that separate essay chats exist and the student's profile carries over to them." : `This is an ESSAY-SPECIFIC chat for: "${chatTitle}". The student already knows you from the brainstorm chat. Do NOT re-introduce yourself or ask for their name or school. Check their profile to understand what you already know. This may be the very first message in this chat — do NOT assume any work has been done on this essay unless the conversation history shows otherwise. If this is a fresh chat, start by referencing what you know from their profile and ask where they want to begin with this essay.`}`;
 
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
