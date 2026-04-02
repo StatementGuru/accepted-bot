@@ -103,9 +103,20 @@ export default function Home() {
       return;
     }
 
-    setChats((prev) => [...prev, data]);
+   setChats((prev) => [...prev, data]);
     setActiveChatId(data.id);
     setSidebarOpen(false);
+  };
+
+  const handleDeleteChat = async (chatId) => {
+    await supabase.from("messages").delete().eq("chat_id", chatId);
+    await supabase.from("chats").delete().eq("id", chatId);
+    setChats((prev) => prev.filter((c) => c.id !== chatId));
+    if (activeChatId === chatId) {
+      const brainstorm = chats.find((c) => c.chat_type === "brainstorm");
+      setActiveChatId(brainstorm?.id || null);
+      setMessages([]);
+    }
   };
 
   const sendMessage = async () => {
@@ -203,6 +214,7 @@ return (
         activeChatId={activeChatId}
         onSelectChat={(id) => { setActiveChatId(id); setSidebarOpen(false); }}
         onNewChat={handleNewChat}
+        onDeleteChat={handleDeleteChat}
         onSignOut={signOut}
         userName={user.user_metadata?.name || user.email}
         isOpen={sidebarOpen}
