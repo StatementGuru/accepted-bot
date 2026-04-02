@@ -162,10 +162,12 @@ export default function Home() {
               const parsed = JSON.parse(data);
               if (parsed.text) {
                 assistantMessage += parsed.text;
-                setMessages([
-                  ...updatedMessages,
-                  { role: "assistant", content: assistantMessage },
-                ]);
+                const current = assistantMessage;
+                setMessages((prev) => {
+                  const updated = [...prev];
+                  updated[updated.length - 1] = { role: "assistant", content: current };
+                  return updated;
+                });
               }
             } catch (e) {}
           }
