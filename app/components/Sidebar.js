@@ -7,7 +7,7 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
   const essays = chats.filter((c) => c.chat_type !== "brainstorm");
   const create = async () => { await onNewChat(newChatName.trim() || "New Essay"); setNewChatName(""); setShowNew(false); };
   const sidebarStyle = {
-    width: "260px", height: "100vh", background: "#0f0f11", borderRight: "1px solid #1e1e22",
+    width: "85vw", maxWidth: "260px", height: "100vh", background: "#0f0f11", borderRight: "1px solid #1e1e22",
     display: "flex", flexDirection: "column", flexShrink: 0, transition: "transform 0.2s ease", zIndex: 50,
     position: "fixed", left: 0, top: 0, transform: isOpen ? "translateX(0)" : "translateX(-100%)"
   };
