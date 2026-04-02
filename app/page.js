@@ -119,7 +119,7 @@ export default function Home() {
     }
   };
 
-  const sendMessage = async () => {
+ const sendMessage = async () => {
     if (!input.trim() || loading || !activeChatId) return;
 
     const userMessage = { role: "user", content: input.trim() };
@@ -141,10 +141,27 @@ export default function Home() {
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      let assistantMessage = "";
+      let fullText = "";
+      let displayedText = "";
       let buffer = "";
+      let animating = false;
 
       setMessages([...updatedMessages, { role: "assistant", content: "" }]);
+
+      const animate = () => {
+        if (displayedText.length < fullText.length) {
+          const charsToAdd = Math.min(3, fullText.length - displayedText.length);
+          displayedText = fullText.slice(0, displayedText.length + charsToAdd);
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = { role: "assistant", content: displayedText };
+            return updated;
+          });
+          requestAnimationFrame(animate);
+        } else {
+          animating = false;
+        }
+      };
 
       while (true) {
         const { done, value } = await reader.read();
@@ -161,21 +178,31 @@ export default function Home() {
             try {
               const parsed = JSON.parse(data);
               if (parsed.text) {
-                assistantMessage += parsed.text;
-                const current = assistantMessage;
-                setMessages((prev) => {
-                  const updated = [...prev];
-                  updated[updated.length - 1] = { role: "assistant", content: current };
-                  return updated;
-                });
+                fullText += parsed.text;
+                if (!animating) {
+                  animating = true;
+                  requestAnimationFrame(animate);
+                }
               }
             } catch (e) {}
           }
         }
       }
 
-      if (assistantMessage) {
-        await saveMessage(activeChatId, "assistant", assistantMessage);
+      // Finish any remaining animation
+      while (displayedText.length < fullText.length) {
+        await new Promise((r) => setTimeout(r, 16));
+        const charsToAdd = Math.min(3, fullText.length - displayedText.length);
+        displayedText = fullText.slice(0, displayedText.length + charsToAdd);
+        setMessages((prev) => {
+          const updated = [...prev];
+          updated[updated.length - 1] = { role: "assistant", content: displayedText };
+          return updated;
+        });
+      }
+
+      if (fullText) {
+        await saveMessage(activeChatId, "assistant", fullText);
       }
     } catch (err) {
       setMessages([
