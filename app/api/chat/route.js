@@ -7,7 +7,7 @@ const supabase = createClient(
 );
 
 export async function POST(req) {
-  const { messages, userId, chatType, chatTitle } = await req.json();
+  const { messages, userId, chatType, chatTitle, chatId } = await req.json();
 
   // Load student profile from Supabase
   let studentProfile = {};
@@ -417,7 +417,7 @@ CHAT CONTEXT: ${chatContext}`;
 
         // After streaming is done, extract profile updates in the background
         if (userId && fullResponse) {
-          updateStudentProfile(userId, messages, fullResponse, studentProfile);
+          updateStudentProfile(userId, messages, fullResponse, studentProfile, chatId);
         }
       }
     },
@@ -432,7 +432,7 @@ CHAT CONTEXT: ${chatContext}`;
   });
 }
 
-async function updateStudentProfile(userId, messages, assistantResponse, currentProfile) {
+async function updateStudentProfile(userId, messages, assistantResponse, currentProfile, chatId) {
   try {
     const recentMessages = messages.slice(-6);
     const convoSnippet = recentMessages.map((m) => m.role + ": " + m.content).join("\n");
@@ -481,3 +481,7 @@ async function updateStudentProfile(userId, messages, assistantResponse, current
         await supabase.from("chats").update({ stage: status }).eq("id", chatId);
       }
     }
+  } catch (err) {
+    console.error("Profile extraction error:", err);
+  }
+}
