@@ -472,7 +472,12 @@ async function updateStudentProfile(userId, messages, assistantResponse, current
       .from("profiles")
       .update({ student_profile: merged })
       .eq("id", userId);
-  } catch (err) {
-    console.error("Profile extraction error:", err);
-  }
-}
+
+    // Update chat stage if this is an essay chat and we have status info
+    if (chatId && merged.prompts) {
+      const promptKey = Object.keys(merged.prompts).find(k => merged.prompts[k]?.status);
+      if (promptKey) {
+        const status = merged.prompts[promptKey].status;
+        await supabase.from("chats").update({ stage: status }).eq("id", chatId);
+      }
+    }
