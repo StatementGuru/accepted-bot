@@ -3,12 +3,13 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 const STAGES = ["brainstormed", "outlined", "drafting", "revising", "final"];
-const STAGE_LABELS = { brainstormed: "B", outlined: "O", drafting: "D", revising: "R", final: "F" };
+const STAGE_LABELS = { brainstormed: "Brainstorm", outlined: "Outline", drafting: "Draft", revising: "Revise", final: "Final" };
 
 export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat, onSignOut, userName, isOpen, onToggle }) {
   const [newChatName, setNewChatName] = useState("");
   const [showNew, setShowNew] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [hoveredStage, setHoveredStage] = useState(null);
   const brainstorm = chats.find((c) => c.chat_type === "brainstorm");
   const essays = chats.filter((c) => c.chat_type !== "brainstorm");
   const create = async () => { await onNewChat(newChatName.trim() || "New Essay"); setNewChatName(""); setShowNew(false); };
@@ -47,7 +48,13 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
           {brainstorm && (
-            <button onClick={() => { onSelectChat(brainstorm.id); onToggle(); }} style={{ width: "100%", padding: "10px 12px", background: activeChatId === brainstorm.id ? "#1e1e22" : "transparent", border: activeChatId === brainstorm.id ? "1px solid #2e2e33" : "1px solid transparent", color: activeChatId === brainstorm.id ? "#22c55e" : "#a1a1aa", borderRadius: "8px", fontSize: "13px", cursor: "pointer", textAlign: "left", fontWeight: activeChatId === brainstorm.id ? "600" : "400", marginBottom: "4px", display: "flex", alignItems: "center", gap: "8px" }}>Brainstorm</button>
+            <button onClick={() => { onSelectChat(brainstorm.id); onToggle(); }} style={{ width: "100%", padding: "14px 14px", background: activeChatId === brainstorm.id ? "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(22,163,74,0.1))" : "rgba(34,197,94,0.05)", border: activeChatId === brainstorm.id ? "1px solid #22c55e" : "1px solid rgba(34,197,94,0.2)", color: activeChatId === brainstorm.id ? "#22c55e" : "#d4d4d8", borderRadius: "10px", fontSize: "14px", cursor: "pointer", textAlign: "left", fontWeight: "600", marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "16px" }}>🏠</span>
+              <div>
+                <div>Main</div>
+                <div style={{ fontSize: "10px", color: "#71717a", fontWeight: "400", marginTop: "2px" }}>Home base & brainstorming</div>
+              </div>
+            </button>
           )}
           {essays.length > 0 && (
             <div style={{ fontSize: "10px", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.05em", padding: "12px 12px 6px", fontWeight: "600" }}>Essays</div>
@@ -55,15 +62,22 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
           {essays.map((chat) => {
             const stageIdx = getStageIndex(chat.stage);
             const isActive = activeChatId === chat.id;
+            const tooltipKey = chat.id;
             return (
               <div key={chat.id} style={{ marginBottom: "6px", padding: "6px", borderRadius: "8px", background: isActive ? "#1e1e22" : "transparent", border: isActive ? "1px solid #2e2e33" : "1px solid transparent" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
                   <button onClick={() => { onSelectChat(chat.id); onToggle(); }} style={{ flex: 1, padding: "4px 6px", background: "transparent", border: "none", color: isActive ? "#22c55e" : "#a1a1aa", fontSize: "13px", cursor: "pointer", textAlign: "left", fontWeight: isActive ? "600" : "400", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chat.title || "Untitled Essay"}</button>
                   <button onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} style={{ background: "none", border: "none", color: confirmDelete === chat.id ? "#ef4444" : "#3f3f46", fontSize: "13px", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>{confirmDelete === chat.id ? "Delete?" : "✕"}</button>
                 </div>
-                <div style={{ display: "flex", gap: "3px", padding: "4px 6px 2px" }}>
+                <div style={{ display: "flex", gap: "3px", padding: "4px 6px 2px", position: "relative" }}>
                   {STAGES.map((s, i) => (
-                    <div key={s} title={s} style={{ flex: 1, height: "4px", borderRadius: "2px", background: i <= stageIdx ? "#22c55e" : "#2e2e33", transition: "background 0.3s" }} />
+                    <div key={s} onMouseEnter={() => setHoveredStage(`${tooltipKey}-${i}`)} onMouseLeave={() => setHoveredStage(null)} onClick={(e) => { e.stopPropagation(); setHoveredStage(`${tooltipKey}-${i}`); setTimeout(() => setHoveredStage(null), 1500); }} style={{ flex: 1, height: "6px", borderRadius: "2px", background: i <= stageIdx ? "#22c55e" : "#2e2e33", transition: "background 0.3s", cursor: "pointer", position: "relative" }}>
+                      {hoveredStage === `${tooltipKey}-${i}` && (
+                        <div style={{ position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)", background: "#000", color: "#fff", padding: "4px 8px", borderRadius: "4px", fontSize: "10px", whiteSpace: "nowrap", zIndex: 100, pointerEvents: "none" }}>
+                          {STAGE_LABELS[s]}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
