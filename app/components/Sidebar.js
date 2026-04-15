@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
+
+const STAGES = ["brainstormed", "outlined", "drafting", "revising", "final"];
+const STAGE_LABELS = { brainstormed: "B", outlined: "O", drafting: "D", revising: "R", final: "F" };
+
 export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, onDeleteChat, onSignOut, userName, isOpen, onToggle }) {
   const [newChatName, setNewChatName] = useState("");
   const [showNew, setShowNew] = useState(false);
@@ -9,13 +13,12 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
   const essays = chats.filter((c) => c.chat_type !== "brainstorm");
   const create = async () => { await onNewChat(newChatName.trim() || "New Essay"); setNewChatName(""); setShowNew(false); };
   const handleDelete = async (chatId) => {
-    if (confirmDelete === chatId) {
-      await onDeleteChat(chatId);
-      setConfirmDelete(null);
-    } else {
-      setConfirmDelete(chatId);
-      setTimeout(() => setConfirmDelete(null), 3000);
-    }
+    if (confirmDelete === chatId) { await onDeleteChat(chatId); setConfirmDelete(null); }
+    else { setConfirmDelete(chatId); setTimeout(() => setConfirmDelete(null), 3000); }
+  };
+  const getStageIndex = (stage) => {
+    const idx = STAGES.indexOf(stage);
+    return idx === -1 ? 0 : idx;
   };
   const sidebarStyle = {
     width: "85vw", maxWidth: "260px", height: "100vh", background: "#0f0f11", borderRight: "1px solid #1e1e22",
@@ -49,12 +52,23 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
           {essays.length > 0 && (
             <div style={{ fontSize: "10px", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.05em", padding: "12px 12px 6px", fontWeight: "600" }}>Essays</div>
           )}
-          {essays.map((chat) => (
-            <div key={chat.id} style={{ display: "flex", alignItems: "center", gap: "4px", marginBottom: "2px" }}>
-              <button onClick={() => { onSelectChat(chat.id); onToggle(); }} style={{ flex: 1, padding: "10px 12px", background: activeChatId === chat.id ? "#1e1e22" : "transparent", border: activeChatId === chat.id ? "1px solid #2e2e33" : "1px solid transparent", color: activeChatId === chat.id ? "#22c55e" : "#a1a1aa", borderRadius: "8px", fontSize: "13px", cursor: "pointer", textAlign: "left", fontWeight: activeChatId === chat.id ? "600" : "400", display: "flex", alignItems: "center", gap: "8px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chat.title || "Untitled Essay"}</button>
-              <button onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} style={{ background: "none", border: "none", color: confirmDelete === chat.id ? "#ef4444" : "#3f3f46", fontSize: "14px", cursor: "pointer", padding: "4px 6px", flexShrink: 0 }}>{confirmDelete === chat.id ? "Sure?" : "✕"}</button>
-            </div>
-          ))}
+          {essays.map((chat) => {
+            const stageIdx = getStageIndex(chat.stage);
+            const isActive = activeChatId === chat.id;
+            return (
+              <div key={chat.id} style={{ marginBottom: "6px", padding: "6px", borderRadius: "8px", background: isActive ? "#1e1e22" : "transparent", border: isActive ? "1px solid #2e2e33" : "1px solid transparent" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                  <button onClick={() => { onSelectChat(chat.id); onToggle(); }} style={{ flex: 1, padding: "4px 6px", background: "transparent", border: "none", color: isActive ? "#22c55e" : "#a1a1aa", fontSize: "13px", cursor: "pointer", textAlign: "left", fontWeight: isActive ? "600" : "400", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{chat.title || "Untitled Essay"}</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDelete(chat.id); }} style={{ background: "none", border: "none", color: confirmDelete === chat.id ? "#ef4444" : "#3f3f46", fontSize: "13px", cursor: "pointer", padding: "2px 4px", flexShrink: 0 }}>{confirmDelete === chat.id ? "Delete?" : "✕"}</button>
+                </div>
+                <div style={{ display: "flex", gap: "3px", padding: "4px 6px 2px" }}>
+                  {STAGES.map((s, i) => (
+                    <div key={s} title={s} style={{ flex: 1, height: "4px", borderRadius: "2px", background: i <= stageIdx ? "#22c55e" : "#2e2e33", transition: "background 0.3s" }} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
         <div style={{ padding: "12px 16px", borderTop: "1px solid #1e1e22", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ fontSize: "12px", color: "#71717a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "160px" }}>{userName || "Student"}</div>
