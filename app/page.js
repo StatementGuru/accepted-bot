@@ -305,7 +305,6 @@ return (
                   {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
                     <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
                   )}
-                  )}
                 </div>
               </div>
             ))
