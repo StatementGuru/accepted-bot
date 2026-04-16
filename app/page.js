@@ -301,9 +301,10 @@ return (
                   </div>
                 )}
                 <div style={{ maxWidth: "75%", padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#22c55e" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                  {msg.content}
-                  {msg.role === "assistant" && msg.content.length > 300 && (
-                  <button onClick={() => { navigator.clipboard.writeText(msg.content); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
+                 {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
+                  {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
+                    <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
+                  )}
                   )}
                 </div>
               </div>
