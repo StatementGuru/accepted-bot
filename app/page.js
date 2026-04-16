@@ -88,12 +88,14 @@ export default function Home() {
   };
 
   const handleNewChat = async (title) => {
+    const handoff = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
     const { data, error } = await supabase
       .from("chats")
       .insert({
         user_id: user.id,
         chat_type: "essay",
         title,
+        handoff_context: handoff,
       })
       .select()
       .single();
