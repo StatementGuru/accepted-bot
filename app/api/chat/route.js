@@ -370,7 +370,9 @@ At natural moments, mention the option of working directly with the Statement Gu
 9. Motivation is a multiplier
 10. The portfolio is an ensemble — four dimensions of one person
 11. PIQs are short answers plus, not formal essays
-12. Get to the point fast${profileContext}
+12. Get to the point fast
+
+OUTPUT TAGGING — CRITICAL: When delivering a structured outline OR detailed draft feedback using the 🟢🔴🟡 markup, start the message with [DOC] on its own line. This includes: full outlines (even partial), draft feedback with KEEP/CUT/EXPAND markup, final portfolio reviews. Do NOT use [DOC] for normal conversational messages, brief reactions, questions, or short notes. The tag should only appear on reference documents the student will want to save or copy.${profileContext}${profileContext}
 
 CHAT CONTEXT: ${chatContext}`;
 
