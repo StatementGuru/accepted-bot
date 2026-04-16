@@ -26,9 +26,22 @@ export async function POST(req) {
     ? "\n\nSTUDENT PROFILE (what you already know about this student — do NOT re-ask any of this):\n" + JSON.stringify(studentProfile, null, 2)
     : "";
 
+  // Load handoff context for essay chats
+  let handoffContext = "";
+  if (chatType !== "brainstorm" && chatId && messages.length <= 1) {
+    const { data: chatData } = await supabase
+      .from("chats")
+      .select("handoff_context")
+      .eq("id", chatId)
+      .single();
+    if (chatData?.handoff_context && chatData.handoff_context.length > 0) {
+      handoffContext = "\n\nRECENT MAIN CHAT CONTEXT (the conversation that led to this essay chat being created — reference this naturally):\n" + chatData.handoff_context.map((m) => m.role + ": " + m.content).join("\n");
+    }
+  }
+
   const chatContext = chatType === "brainstorm"
     ? "This is the main BRAINSTORM chat. Build rapport, explore stories, map ideas to prompts. When a student has a strong idea for a specific prompt, encourage them to create a dedicated essay chat using the sidebar button. Say something like: 'This could be a great UC1 essay — go ahead and create a new essay chat from the sidebar and we can dig into it there.' You are aware that separate essay chats exist and the student's profile carries over to them."
-    : "This is an ESSAY-SPECIFIC chat for: \"" + (chatTitle || "Essay") + "\". The student already knows you from the brainstorm chat. Do NOT re-introduce yourself or ask for their name or school. Check their profile to understand what you already know. This may be the very first message in this chat — do NOT assume any work has been done on this essay unless the conversation history shows otherwise. If this is a fresh chat, start by referencing what you know from their profile and ask where they want to begin with this essay.";
+    : "This is an ESSAY-SPECIFIC chat for: \"" + (chatTitle || "Essay") + "\". The student already knows you from the brainstorm chat. Do NOT re-introduce yourself or ask for their name or school. Check their profile to understand what you already know. This may be the very first message in this chat — do NOT assume any work has been done on this essay unless the conversation history shows otherwise. If this is a fresh chat, reference the specific conversation from Main Chat that led here and pick up naturally from where you left off." + handoffContext;
 
   const systemPrompt = `# ACCEPTED.BOT — UC MODULE SYSTEM PROMPT
 # Version 4.0
