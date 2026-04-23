@@ -87,7 +87,7 @@ export default function Home() {
     if (error) console.error("Error saving message:", error);
   };
 
-  const handleNewChat = async (title) => {
+  const handleNewChat = async (title, promptType) => {
     const handoff = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
     const { data, error } = await supabase
       .from("chats")
@@ -95,6 +95,7 @@ export default function Home() {
         user_id: user.id,
         chat_type: "essay",
         title,
+        prompt_type: promptType,
         handoff_context: handoff,
       })
       .select()
