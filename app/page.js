@@ -255,7 +255,7 @@ export default function Home() {
       />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <div style={{ padding: "14px 24px", borderBottom: "1px solid #1e1e22", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0f0f11" }}>
+        <div style={{ padding: "14px 24px", borderBottom: "1px solid #1e1e22", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", background: "#0f0f11" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#a1a1aa", fontSize: "20px", cursor: "pointer", padding: "4px", display: "block" }} className="mobile-menu-btn">
               ☰
@@ -265,8 +265,10 @@ export default function Home() {
               <div style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}>{chatSubtitle}</div>
             </div>
           </div>
-          <img src="/acceptedbotlogo.png" alt="accepted.bot" style={{ height: "22px" }} />
-          <img src="/tedbot.png" alt="Ted" style={{ width: "50px", height: "50px", flexShrink: 0 }} />
+          <img src="/acceptedbotlogo.png" alt="accepted.bot" style={{ height: "32px" }} />
+          <div style={{ display: "flex", justifyContent: "flex-end" }}>
+            <img src="/tedbot.png" alt="Ted" style={{ width: "50px", height: "50px" }} />
+          </div>
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
@@ -297,7 +299,7 @@ export default function Home() {
             messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "10px" }}>
                 <div style={{ maxWidth: "75%" }}>
-                  <div style={{ fontSize: "11px", color: "#52525b", marginBottom: "4px", textAlign: msg.role === "user" ? "right" : "left" }}>
+                  <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px", textAlign: msg.role === "user" ? "right" : "left" }}>
                     {msg.role === "user" ? studentName : "Ted"}
                   </div>
                   <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#22c55e" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
@@ -314,7 +316,7 @@ export default function Home() {
           {loading && messages[messages.length - 1]?.role !== "assistant" && (
             <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
               <div style={{ maxWidth: "75%" }}>
-                <div style={{ fontSize: "11px", color: "#52525b", marginBottom: "4px" }}>Ted</div>
+                <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px" }}>Ted</div>
                 <div style={{ padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "#1e1e22", display: "flex", gap: "6px", alignItems: "center" }}>
                   <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
                   <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out infinite" }} />
@@ -353,8 +355,8 @@ export default function Home() {
               </svg>
             </button>
           </div>
-          <div style={{ textAlign: "center", fontSize: "11px", color: "#3f3f46", marginTop: "10px" }}>
-            accepted.bot — powered by Statement Guru methodology
+          <div style={{ textAlign: "center", fontSize: "12px", color: "#52525b", marginTop: "10px" }}>
+            ACCEPTED.BOT — powered by Nived Ravikumar, the Statement Guru
           </div>
         </div>
       </div>
