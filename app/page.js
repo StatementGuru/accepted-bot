@@ -226,7 +226,7 @@ export default function Home() {
   const activeChat = chats.find((c) => c.id === activeChatId);
   const chatTitle = activeChat?.chat_type === "brainstorm" ? "Main Chat" : (activeChat?.title || "Essay");
   const chatSubtitle = "UC PIQ Module";
-  const studentName = user.user_metadata?.name || "You";
+  const studentName = user?.user_metadata?.name || "You";
 
   if (authLoading) {
     return (
