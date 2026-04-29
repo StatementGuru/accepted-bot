@@ -258,9 +258,7 @@ return (
           <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#a1a1aa", fontSize: "20px", cursor: "pointer", padding: "4px", display: "block" }} className="mobile-menu-btn">
             ☰
           </button>
-          <div style={{ width: "36px", height: "36px", borderRadius: "10px", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "14px", fontWeight: "700", color: "#fff", letterSpacing: "-0.02em", flexShrink: 0 }}>
-            Ted
-          </div>
+          <img src="/tedbot.png" alt="Ted" style={{ width: "40px", height: "40px", flexShrink: 0 }} />
           <div>
             <div style={{ fontWeight: "600", fontSize: "15px", color: "#f4f4f5" }}>{chatTitle}</div>
             <div style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}>{chatSubtitle}</div>
