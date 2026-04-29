@@ -106,7 +106,7 @@ export default function Home() {
       return;
     }
 
-   setChats((prev) => [...prev, data]);
+    setChats((prev) => [...prev, data]);
     setActiveChatId(data.id);
     setSidebarOpen(false);
   };
@@ -122,7 +122,7 @@ export default function Home() {
     }
   };
 
- const sendMessage = async () => {
+  const sendMessage = async () => {
     if (!input.trim() || loading || !activeChatId) return;
 
     const userMessage = { role: "user", content: input.trim() };
@@ -138,8 +138,8 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: updatedMessages, userId: user.id, chatType: activeChat?.chat_type, chatTitle: activeChat?.title, chatId: activeChatId }),
-             });
-        
+      });
+
       if (!response.ok) throw new Error("Failed to get response");
 
       const reader = response.body.getReader();
@@ -192,7 +192,6 @@ export default function Home() {
         }
       }
 
-      // Finish any remaining animation
       while (displayedText.length < fullText.length) {
         await new Promise((r) => setTimeout(r, 16));
         const charsToAdd = Math.min(3, fullText.length - displayedText.length);
@@ -227,6 +226,8 @@ export default function Home() {
   const activeChat = chats.find((c) => c.id === activeChatId);
   const chatTitle = activeChat?.chat_type === "brainstorm" ? "Main Chat" : (activeChat?.title || "Essay");
   const chatSubtitle = "UC PIQ Module";
+  const studentName = user.user_metadata?.name || "You";
+
   if (authLoading) {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0b", color: "#71717a", fontSize: "14px" }}>
@@ -238,7 +239,8 @@ export default function Home() {
   if (!user) {
     return <LoginPage />;
   }
-return (
+
+  return (
     <div style={{ height: "100vh", display: "flex", background: "#0a0a0b", fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#e4e4e7" }}>
       <Sidebar
         chats={chats}
@@ -253,15 +255,18 @@ return (
       />
 
       <div style={{ flex: 1, display: "flex", flexDirection: "column", minWidth: 0 }}>
-        <div style={{ padding: "14px 24px", borderBottom: "1px solid #1e1e22", display: "flex", alignItems: "center", gap: "12px", background: "#0f0f11" }}>
-          <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#a1a1aa", fontSize: "20px", cursor: "pointer", padding: "4px", display: "block" }} className="mobile-menu-btn">
-            ☰
-          </button>
-          <img src="/tedbot.png" alt="Ted" style={{ width: "60px", height: "60px", flexShrink: 0 }} />
-          <div>
-            <div style={{ fontWeight: "600", fontSize: "15px", color: "#f4f4f5" }}>{chatTitle}</div>
-            <div style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}>{chatSubtitle}</div>
+        <div style={{ padding: "14px 24px", borderBottom: "1px solid #1e1e22", display: "flex", alignItems: "center", justifyContent: "space-between", background: "#0f0f11" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} style={{ background: "none", border: "none", color: "#a1a1aa", fontSize: "20px", cursor: "pointer", padding: "4px", display: "block" }} className="mobile-menu-btn">
+              ☰
+            </button>
+            <div>
+              <div style={{ fontWeight: "700", fontSize: "18px", color: "#f4f4f5" }}>{chatTitle}</div>
+              <div style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}>{chatSubtitle}</div>
+            </div>
           </div>
+          <img src="/acceptedbotlogo.png" alt="accepted.bot" style={{ height: "22px" }} />
+          <img src="/tedbot.png" alt="Ted" style={{ width: "50px", height: "50px", flexShrink: 0 }} />
         </div>
 
         <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
@@ -271,9 +276,7 @@ return (
             </div>
           ) : messages.length === 0 ? (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: "16px", opacity: 0.6 }}>
-              <div style={{ width: "64px", height: "64px", borderRadius: "16px", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", fontWeight: "700", color: "#fff" }}>
-                Ted
-              </div>
+              <img src="/tedbot.png" alt="Ted" style={{ width: "80px", height: "80px" }} />
               <div style={{ fontSize: "20px", fontWeight: "600", color: "#f4f4f5" }}>{chatTitle}</div>
               <div style={{ fontSize: "14px", color: "#71717a", textAlign: "center", maxWidth: "420px", lineHeight: "1.5" }}>
                 {activeChat?.chat_type === "brainstorm"
@@ -293,28 +296,31 @@ return (
           ) : (
             messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "10px" }}>
-                {msg.role === "assistant" && (
-                  <img src="/tedbot.png" alt="Ted" style={{ width: "60px", height: "60px", flexShrink: 0 }} />
-                )}
-                <div style={{ maxWidth: "75%", padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#22c55e" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                 {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
-                  {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
-                    <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
-                  )}
+                <div style={{ maxWidth: "75%" }}>
+                  <div style={{ fontSize: "11px", color: "#52525b", marginBottom: "4px", textAlign: msg.role === "user" ? "right" : "left" }}>
+                    {msg.role === "user" ? studentName : "Ted"}
+                  </div>
+                  <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#22c55e" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                    {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
+                    {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
+                      <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))
           )}
-{loading && messages[messages.length - 1]?.role !== "assistant" && (
+
+          {loading && messages[messages.length - 1]?.role !== "assistant" && (
             <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-              <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: "700", color: "#fff", flexShrink: 0 }}>
-                Ted
-              </div>
-              <div style={{ padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "#1e1e22", display: "flex", gap: "6px", alignItems: "center" }}>
-                <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out infinite" }} />
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.3s infinite" }} />
-                <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.6s infinite" }} />
+              <div style={{ maxWidth: "75%" }}>
+                <div style={{ fontSize: "11px", color: "#52525b", marginBottom: "4px" }}>Ted</div>
+                <div style={{ padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "#1e1e22", display: "flex", gap: "6px", alignItems: "center" }}>
+                  <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
+                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out infinite" }} />
+                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.3s infinite" }} />
+                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.6s infinite" }} />
+                </div>
               </div>
             </div>
           )}
