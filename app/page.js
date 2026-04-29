@@ -225,9 +225,8 @@ export default function Home() {
   };
 
   const activeChat = chats.find((c) => c.id === activeChatId);
-  const chatTitle = activeChat?.title || "Brainstorm";
-  const chatSubtitle = activeChat?.chat_type === "brainstorm" ? "UC Essay Coach" : "Essay Workshop";
-
+  const chatTitle = activeChat?.chat_type === "brainstorm" ? "Main Chat" : (activeChat?.title || "Essay");
+  const chatSubtitle = "UC PIQ Module";
   if (authLoading) {
     return (
       <div style={{ height: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "#0a0a0b", color: "#71717a", fontSize: "14px" }}>
@@ -295,9 +294,7 @@ return (
             messages.map((msg, i) => (
               <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "10px" }}>
                 {msg.role === "assistant" && (
-                  <div style={{ width: "28px", height: "28px", borderRadius: "8px", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "9px", fontWeight: "700", color: "#fff", flexShrink: 0, marginTop: "2px", letterSpacing: "-0.02em" }}>
-                    Ted
-                  </div>
+                  <img src="/tedbot.png" alt="Ted" style={{ width: "60px", height: "60px", flexShrink: 0 }} />
                 )}
                 <div style={{ maxWidth: "75%", padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#22c55e" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                  {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
