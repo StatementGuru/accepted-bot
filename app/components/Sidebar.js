@@ -8,7 +8,7 @@ const PROMPT_TYPES = [
   { value: "talent", label: "Talent/Skill PIQ" },
   { value: "education", label: "Educational PIQ" },
   { value: "challenge", label: "Challenge PIQ" },
-  { value: "academic", label: "Academic Subject PIQ (Freshman)" },
+  { value: "academic", label: "Academic Subject PIQ (Freshman Only)" },
   { value: "community", label: "Community PIQ" },
   { value: "catchall", label: "Beyond PIQ" },
   { value: "transfer_mandatory", label: "Preparation PIQ (Transfer Only)" },
