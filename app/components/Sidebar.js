@@ -6,12 +6,12 @@ const PROMPT_TYPES = [
   { value: "leadership", label: "Leadership PIQ" },
   { value: "creativity", label: "Creativity PIQ" },
   { value: "talent", label: "Talent/Skill PIQ" },
-  { value: "education", label: "Educational Opportunity PIQ" },
+  { value: "education", label: "Educational PIQ" },
   { value: "challenge", label: "Challenge PIQ" },
-  { value: "academic", label: "Academic Subject PIQ" },
+  { value: "academic", label: "Academic Subject PIQ (Freshman)" },
   { value: "community", label: "Community PIQ" },
-  { value: "catchall", label: "Catch-all PIQ" },
-  { value: "transfer_mandatory", label: "Transfer Mandatory" },
+  { value: "catchall", label: "Beyond PIQ" },
+  { value: "transfer_mandatory", label: "Preparation PIQ (Transfer Only)" },
 ];
 
 const STAGES = ["brainstormed", "outlined", "drafting", "revising", "final"];
@@ -67,14 +67,19 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
             </div>
             <button onClick={onToggle} style={{ background: "none", border: "none", color: "#71717a", fontSize: "20px", cursor: "pointer", padding: "4px" }}>✕</button>
           </div>
+        </div>
+        <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
+          {brainstorm && (
+            <button onClick={() => { onSelectChat(brainstorm.id); onToggle(); }} style={{ width: "100%", padding: "12px 12px", background: activeChatId === brainstorm.id ? "#1e1e22" : "transparent", border: activeChatId === brainstorm.id ? "1px solid #22c55e" : "1px solid transparent", color: activeChatId === brainstorm.id ? "#22c55e" : "#d4d4d8", borderRadius: "8px", fontSize: "14px", cursor: "pointer", textAlign: "left", fontWeight: "600", marginBottom: "4px" }}>Main Chat</button>
+          )}
           {atLimit ? (
-            <div style={{ padding: "10px", background: "#1e1e22", border: "1px solid #2e2e33", borderRadius: "8px", fontSize: "12px", color: "#71717a", textAlign: "center" }}>4 of 4 essay chats used</div>
+            <div style={{ padding: "8px 12px", fontSize: "11px", color: "#52525b", textAlign: "center" }}>4 of 4 PIQ chats used</div>
           ) : (
-            <button onClick={() => setShowNew(!showNew)} style={{ width: "100%", padding: "10px", background: "#1e1e22", border: "1px solid #2e2e33", color: "#a1a1aa", borderRadius: "8px", fontSize: "13px", cursor: "pointer", fontWeight: "500", textAlign: "left" }}>+ New Essay Chat</button>
+            <button onClick={() => setShowNew(!showNew)} style={{ width: "100%", padding: "8px 12px", background: "transparent", border: "1px solid transparent", color: "#71717a", borderRadius: "8px", fontSize: "13px", cursor: "pointer", fontWeight: "500", textAlign: "left", marginBottom: "4px" }}>+ New PIQ Chat</button>
           )}
           {showNew && !atLimit && (
-            <div style={{ marginTop: "8px" }}>
-              <select value={selectedPrompt} onChange={(e) => setSelectedPrompt(e.target.value)} style={{ width: "100%", padding: "8px 10px", background: "#1a1a1d", border: "1px solid #2e2e33", color: "#e4e4e7", borderRadius: "6px", fontSize: "12px", outline: "none", marginBottom: "6px", appearance: "none" }}>
+            <div style={{ padding: "4px 8px 8px", marginBottom: "4px" }}>
+              <select value={selectedPrompt} onChange={(e) => setSelectedPrompt(e.target.value)} style={{ width: "100%", padding: "8px 10px", background: "#1a1a1d", border: "1px solid #2e2e33", color: "#e4e4e7", borderRadius: "6px", fontSize: "12px", outline: "none", marginBottom: "6px" }}>
                 <option value="" disabled>Select prompt type...</option>
                 {availablePrompts.map((p) => (
                   <option key={p.value} value={p.value}>{p.label}</option>
@@ -88,19 +93,8 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
               )}
             </div>
           )}
-        </div>
-        <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
-          {brainstorm && (
-            <button onClick={() => { onSelectChat(brainstorm.id); onToggle(); }} style={{ width: "100%", padding: "14px 14px", background: activeChatId === brainstorm.id ? "linear-gradient(135deg, rgba(34,197,94,0.15), rgba(22,163,74,0.1))" : "rgba(34,197,94,0.05)", border: activeChatId === brainstorm.id ? "1px solid #22c55e" : "1px solid rgba(34,197,94,0.2)", color: activeChatId === brainstorm.id ? "#22c55e" : "#d4d4d8", borderRadius: "10px", fontSize: "14px", cursor: "pointer", textAlign: "left", fontWeight: "600", marginBottom: "8px", display: "flex", alignItems: "center", gap: "10px" }}>
-              <span style={{ fontSize: "16px" }}>🏠</span>
-              <div>
-                <div>Main</div>
-                <div style={{ fontSize: "10px", color: "#71717a", fontWeight: "400", marginTop: "2px" }}>Home base & brainstorming</div>
-              </div>
-            </button>
-          )}
           {essays.length > 0 && (
-            <div style={{ fontSize: "10px", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.05em", padding: "12px 12px 6px", fontWeight: "600" }}>Essays ({essays.length}/4)</div>
+            <div style={{ fontSize: "10px", color: "#52525b", textTransform: "uppercase", letterSpacing: "0.05em", padding: "8px 12px 6px", fontWeight: "600" }}>Essays ({essays.length}/4)</div>
           )}
           {essays.map((chat) => {
             const stageIdx = getStageIndex(chat.stage);
