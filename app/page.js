@@ -153,7 +153,7 @@ export default function Home() {
 
       const animate = () => {
         if (displayedText.length < fullText.length) {
-          const charsToAdd = Math.min(3, fullText.length - displayedText.length);
+          const charsToAdd = Math.min(1, fullText.length - displayedText.length);
           displayedText = fullText.slice(0, displayedText.length + charsToAdd);
           setMessages((prev) => {
             const updated = [...prev];
@@ -194,7 +194,7 @@ export default function Home() {
 
       while (displayedText.length < fullText.length) {
         await new Promise((r) => setTimeout(r, 16));
-        const charsToAdd = Math.min(3, fullText.length - displayedText.length);
+        const charsToAdd = Math.min(1, fullText.length - displayedText.length);
         displayedText = fullText.slice(0, displayedText.length + charsToAdd);
         setMessages((prev) => {
           const updated = [...prev];
