@@ -61,17 +61,11 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
       <div style={sidebarStyle}>
         <div style={{ padding: "16px", borderBottom: "1px solid #1e1e22" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div style={{ width: "32px", height: "32px", borderRadius: "8px", background: "linear-gradient(135deg, #22c55e, #16a34a)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "700", color: "#fff" }}>Ted</div>
-              <div style={{ fontSize: "14px", fontWeight: "600", color: "#f4f4f5" }}>accepted.bot</div>
-            </div>
+            <button onClick={() => { onSelectChat(brainstorm?.id); onToggle(); }} style={{ background: "none", border: "none", color: activeChatId === brainstorm?.id ? "#22c55e" : "#d4d4d8", fontSize: "16px", fontWeight: "700", cursor: "pointer", padding: 0 }}>Main Chat</button>
             <button onClick={onToggle} style={{ background: "none", border: "none", color: "#71717a", fontSize: "20px", cursor: "pointer", padding: "4px" }}>✕</button>
           </div>
         </div>
         <div style={{ flex: 1, overflowY: "auto", padding: "8px" }}>
-          {brainstorm && (
-            <button onClick={() => { onSelectChat(brainstorm.id); onToggle(); }} style={{ width: "100%", padding: "12px 12px", background: activeChatId === brainstorm.id ? "#1e1e22" : "transparent", border: activeChatId === brainstorm.id ? "1px solid #22c55e" : "1px solid transparent", color: activeChatId === brainstorm.id ? "#22c55e" : "#d4d4d8", borderRadius: "8px", fontSize: "14px", cursor: "pointer", textAlign: "left", fontWeight: "600", marginBottom: "4px" }}>Main Chat</button>
-          )}
           {atLimit ? (
             <div style={{ padding: "8px 12px", fontSize: "11px", color: "#52525b", textAlign: "center" }}>4 of 4 PIQ chats used</div>
           ) : (
