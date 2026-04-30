@@ -282,7 +282,7 @@ export default function Home() {
               <div style={{ fontSize: "20px", fontWeight: "600", color: "#f4f4f5" }}>{chatTitle}</div>
               <div style={{ fontSize: "14px", color: "#71717a", textAlign: "center", maxWidth: "420px", lineHeight: "1.5" }}>
                 {activeChat?.chat_type === "brainstorm"
-                  ? "Your UC essay coach. Tell me about yourself and we'll find the stories that get you in."
+                  ? "Your UC PIQ coach. Tell me about yourself and we'll find the stories that get you in."
                   : "Let's work on your " + chatTitle + " essay."}
               </div>
               {activeChat?.chat_type === "brainstorm" && (
