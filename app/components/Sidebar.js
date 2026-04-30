@@ -60,8 +60,8 @@ export default function Sidebar({ chats, activeChatId, onSelectChat, onNewChat, 
       {isOpen && <div onClick={onToggle} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", zIndex: 40 }} />}
       <div style={sidebarStyle}>
         <div style={{ padding: "16px", borderBottom: "1px solid #1e1e22" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-            <button onClick={() => { onSelectChat(brainstorm?.id); onToggle(); }} style={{ background: "none", border: "none", color: activeChatId === brainstorm?.id ? "#22c55e" : "#d4d4d8", fontSize: "16px", fontWeight: "700", cursor: "pointer", padding: 0 }}>Main Chat</button>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+            <button onClick={() => { onSelectChat(brainstorm?.id); onToggle(); }} style={{ background: "none", border: "none", color: activeChatId === brainstorm?.id ? "#22c55e" : "#d4d4d8", fontSize: "14px", fontWeight: "600", cursor: "pointer", padding: 0 }}>Return to Main Chat</button>
             <button onClick={onToggle} style={{ background: "none", border: "none", color: "#71717a", fontSize: "20px", cursor: "pointer", padding: "4px" }}>✕</button>
           </div>
         </div>
