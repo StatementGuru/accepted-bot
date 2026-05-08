@@ -40,18 +40,7 @@ export default function Home() {
   useEffect(() => {
     if (!activeChatId) return;
     try { localStorage.setItem("accepted_active_chat", activeChatId); } catch (e) {}
-
-    console.log("Switching to chat:", activeChatId);
-    console.log("Cache keys:", Object.keys(messagesCacheRef.current));
-    console.log("Cache hit:", !!messagesCacheRef.current[activeChatId]);
-
-    const cached = messagesCacheRef.current[activeChatId];
-    if (cached) {
-      prevMessageCount.current = cached.length;
-      setMessages(cached);
-    } else {
-      loadMessages(activeChatId);
-    }
+    loadMessages(activeChatId);
   }, [activeChatId]);
 
   const loadChats = async () => {
@@ -70,7 +59,6 @@ export default function Home() {
 
     setChats(data || []);
 
-    // Restore last active chat from localStorage, fallback to brainstorm
     let savedChatId = null;
     try { savedChatId = localStorage.getItem("accepted_active_chat"); } catch (e) {}
 
@@ -84,6 +72,12 @@ export default function Home() {
   };
 
   const loadMessages = async (chatId) => {
+    if (messagesCacheRef.current[chatId]) {
+      setMessages(messagesCacheRef.current[chatId]);
+      prevMessageCount.current = messagesCacheRef.current[chatId].length;
+      return;
+    }
+
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -102,11 +96,6 @@ export default function Home() {
     messagesCacheRef.current[chatId] = loaded;
     prevMessageCount.current = loaded.length;
     setMessages(loaded);
-    setTimeout(() => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-      }
-    }, 100);
   };
 
   const saveMessage = async (chatId, role, content) => {
@@ -155,9 +144,8 @@ export default function Home() {
   };
 
   const handleSelectChat = (id) => {
-    // Cache current messages before switching
     if (activeChatId && messages.length > 0) {
-      messagesCacheRef.current[activeChatId] = messages;
+      messagesCacheRef.current[activeChatId] = [...messages];
     }
     setActiveChatId(id);
     setSidebarOpen(false);
