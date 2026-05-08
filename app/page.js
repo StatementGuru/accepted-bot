@@ -14,6 +14,7 @@ export default function Home() {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [messages, setMessages] = useState([]);
+  const [messagesCache, setMessagesCache] = useState({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -59,6 +60,11 @@ export default function Home() {
   };
 
   const loadMessages = async (chatId) => {
+    if (messagesCache[chatId]) {
+      setMessages(messagesCache[chatId]);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -70,12 +76,12 @@ export default function Home() {
       return;
     }
 
-    setMessages(
-      (data || []).map((m) => ({
-        role: m.role,
-        content: m.content,
-      }))
-    );
+    const loaded = (data || []).map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
+    setMessages(loaded);
+    setMessagesCache((prev) => ({ ...prev, [chatId]: loaded }));
   };
 
   const saveMessage = async (chatId, role, content) => {
@@ -206,6 +212,8 @@ export default function Home() {
       if (fullText) {
         await saveMessage(activeChatId, "assistant", fullText);
       }
+
+      setMessagesCache((prev) => ({ ...prev, [activeChatId]: [...updatedMessages, { role: "assistant", content: fullText }] }));
     } catch (err) {
       setMessages([
         ...updatedMessages,
