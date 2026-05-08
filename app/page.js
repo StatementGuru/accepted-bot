@@ -51,8 +51,10 @@ export default function Home() {
       loadMessages(activeChatId);
     }
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-    }, 100);
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
+    }, 300);
   }, [activeChatId]);
 
   const loadChats = async () => {
