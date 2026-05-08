@@ -75,6 +75,13 @@ export default function Home() {
     if (messagesCacheRef.current[chatId]) {
       setMessages(messagesCacheRef.current[chatId]);
       prevMessageCount.current = messagesCacheRef.current[chatId].length;
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+          }
+        });
+      });
       return;
     }
 
