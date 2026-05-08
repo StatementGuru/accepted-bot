@@ -14,7 +14,6 @@ export default function Home() {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [messagesCache, setMessagesCache] = useState({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,9 +23,8 @@ export default function Home() {
   const inputRef = useRef(null);
   const prevMessageCount = useRef(0);
   const scrollContainerRef = useRef(null);
-  const scrollPositions = useRef({});
+  const messagesCacheRef = useRef({});
 
-  // Only scroll to bottom when new messages are added, not on chat switch
   useEffect(() => {
     if (messages.length > prevMessageCount.current) {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -39,22 +37,18 @@ export default function Home() {
     loadChats();
   }, [user]);
 
-  // Save scroll position before switching, restore after
   useEffect(() => {
-    useEffect(() => {
     if (!activeChatId) return;
+    // Save active chat to localStorage
+    try { localStorage.setItem("accepted_active_chat", activeChatId); } catch (e) {}
 
-    if (messagesCache[activeChatId]) {
-      setMessages(messagesCache[activeChatId]);
-      prevMessageCount.current = messagesCache[activeChatId].length;
+    const cached = messagesCacheRef.current[activeChatId];
+    if (cached) {
+      prevMessageCount.current = cached.length;
+      setMessages(cached);
     } else {
       loadMessages(activeChatId);
     }
-    setTimeout(() => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-      }
-    }, 300);
   }, [activeChatId]);
 
   const loadChats = async () => {
@@ -72,9 +66,16 @@ export default function Home() {
     }
 
     setChats(data || []);
+
+    // Restore last active chat from localStorage, fallback to brainstorm
+    let savedChatId = null;
+    try { savedChatId = localStorage.getItem("accepted_active_chat"); } catch (e) {}
+
+    const savedChat = savedChatId && data?.find((c) => c.id === savedChatId);
     const brainstorm = data?.find((c) => c.chat_type === "brainstorm");
-    if (brainstorm && !activeChatId) {
-      setActiveChatId(brainstorm.id);
+
+    if (!activeChatId) {
+      setActiveChatId(savedChat ? savedChat.id : brainstorm?.id || null);
     }
     setInitialLoading(false);
   };
@@ -95,12 +96,14 @@ export default function Home() {
       role: m.role,
       content: m.content,
     }));
-    setMessages(loaded);
+    messagesCacheRef.current[chatId] = loaded;
     prevMessageCount.current = loaded.length;
-    setMessagesCache((prev) => ({ ...prev, [chatId]: loaded }));
+    setMessages(loaded);
     setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
-    }, 50);
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
+      }
+    }, 100);
   };
 
   const saveMessage = async (chatId, role, content) => {
@@ -140,11 +143,7 @@ export default function Home() {
     await supabase.from("messages").delete().eq("chat_id", chatId);
     await supabase.from("chats").delete().eq("id", chatId);
     setChats((prev) => prev.filter((c) => c.id !== chatId));
-    setMessagesCache((prev) => {
-      const updated = { ...prev };
-      delete updated[chatId];
-      return updated;
-    });
+    delete messagesCacheRef.current[chatId];
     if (activeChatId === chatId) {
       const brainstorm = chats.find((c) => c.chat_type === "brainstorm");
       setActiveChatId(brainstorm?.id || null);
@@ -152,15 +151,10 @@ export default function Home() {
     }
   };
 
-  const handleScroll = () => {
-    if (scrollContainerRef.current && activeChatId) {
-      scrollPositions.current[activeChatId] = scrollContainerRef.current.scrollTop;
-    }
-  };
-
   const handleSelectChat = (id) => {
-    if (scrollContainerRef.current && activeChatId) {
-      scrollPositions.current[activeChatId] = scrollContainerRef.current.scrollTop;
+    // Cache current messages before switching
+    if (activeChatId && messages.length > 0) {
+      messagesCacheRef.current[activeChatId] = messages;
     }
     setActiveChatId(id);
     setSidebarOpen(false);
@@ -252,7 +246,7 @@ export default function Home() {
       }
 
       const finalMessages = [...updatedMessages, { role: "assistant", content: fullText }];
-      setMessagesCache((prev) => ({ ...prev, [activeChatId]: finalMessages }));
+      messagesCacheRef.current[activeChatId] = finalMessages;
     } catch (err) {
       setMessages([
         ...updatedMessages,
@@ -271,7 +265,7 @@ export default function Home() {
   };
 
   const activeChat = chats.find((c) => c.id === activeChatId);
-  const chatTitle = activeChat?.chat_type === "brainstorm" ? "Main Chat" : (activeChat?.title || "Essay");
+  const chatTitle = activeChat ? (activeChat.chat_type === "brainstorm" ? "Main Chat" : (activeChat.title || "Essay")) : "Main Chat";
   const chatSubtitle = "UC PIQ Module";
   const studentName = user?.user_metadata?.name || "You";
 
@@ -318,7 +312,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div ref={scrollContainerRef} onScroll={handleScroll} style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
+        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
           {initialLoading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: "#71717a", fontSize: "14px" }}>
               Loading your chats...
@@ -349,7 +343,7 @@ export default function Home() {
                   <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px", textAlign: msg.role === "user" ? "right" : "left" }}>
                     {msg.role === "user" ? studentName : "Ted"}
                   </div>
-                  <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#22c55e" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                  <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#16a34a" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
                     {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
                     {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
                       <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
