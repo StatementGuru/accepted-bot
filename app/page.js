@@ -39,8 +39,11 @@ export default function Home() {
 
   useEffect(() => {
     if (!activeChatId) return;
-    // Save active chat to localStorage
     try { localStorage.setItem("accepted_active_chat", activeChatId); } catch (e) {}
+
+    console.log("Switching to chat:", activeChatId);
+    console.log("Cache keys:", Object.keys(messagesCacheRef.current));
+    console.log("Cache hit:", !!messagesCacheRef.current[activeChatId]);
 
     const cached = messagesCacheRef.current[activeChatId];
     if (cached) {
