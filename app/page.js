@@ -41,19 +41,18 @@ export default function Home() {
 
   // Save scroll position before switching, restore after
   useEffect(() => {
+    useEffect(() => {
     if (!activeChatId) return;
 
     if (messagesCache[activeChatId]) {
       setMessages(messagesCache[activeChatId]);
       prevMessageCount.current = messagesCache[activeChatId].length;
-      setTimeout(() => {
-        if (scrollContainerRef.current && scrollPositions.current[activeChatId] !== undefined) {
-          scrollContainerRef.current.scrollTop = scrollPositions.current[activeChatId];
-        }
-      }, 50);
     } else {
       loadMessages(activeChatId);
     }
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, 100);
   }, [activeChatId]);
 
   const loadChats = async () => {
