@@ -22,9 +22,16 @@ export default function Home() {
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+  const prevMessageCount = useRef(0);
+  const scrollContainerRef = useRef(null);
+  const scrollPositions = useRef({});
 
+  // Only scroll to bottom when new messages are added, not on chat switch
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messages.length > prevMessageCount.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMessageCount.current = messages.length;
   }, [messages]);
 
   useEffect(() => {
@@ -32,9 +39,21 @@ export default function Home() {
     loadChats();
   }, [user]);
 
+  // Save scroll position before switching, restore after
   useEffect(() => {
     if (!activeChatId) return;
-    loadMessages(activeChatId);
+
+    if (messagesCache[activeChatId]) {
+      setMessages(messagesCache[activeChatId]);
+      prevMessageCount.current = messagesCache[activeChatId].length;
+      setTimeout(() => {
+        if (scrollContainerRef.current && scrollPositions.current[activeChatId] !== undefined) {
+          scrollContainerRef.current.scrollTop = scrollPositions.current[activeChatId];
+        }
+      }, 50);
+    } else {
+      loadMessages(activeChatId);
+    }
   }, [activeChatId]);
 
   const loadChats = async () => {
@@ -60,11 +79,6 @@ export default function Home() {
   };
 
   const loadMessages = async (chatId) => {
-    if (messagesCache[chatId]) {
-      setMessages(messagesCache[chatId]);
-      return;
-    }
-
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -81,7 +95,11 @@ export default function Home() {
       content: m.content,
     }));
     setMessages(loaded);
+    prevMessageCount.current = loaded.length;
     setMessagesCache((prev) => ({ ...prev, [chatId]: loaded }));
+    setTimeout(() => {
+      messagesEndRef.current?.scrollIntoView({ behavior: "instant" });
+    }, 50);
   };
 
   const saveMessage = async (chatId, role, content) => {
@@ -121,11 +139,30 @@ export default function Home() {
     await supabase.from("messages").delete().eq("chat_id", chatId);
     await supabase.from("chats").delete().eq("id", chatId);
     setChats((prev) => prev.filter((c) => c.id !== chatId));
+    setMessagesCache((prev) => {
+      const updated = { ...prev };
+      delete updated[chatId];
+      return updated;
+    });
     if (activeChatId === chatId) {
       const brainstorm = chats.find((c) => c.chat_type === "brainstorm");
       setActiveChatId(brainstorm?.id || null);
       setMessages([]);
     }
+  };
+
+  const handleScroll = () => {
+    if (scrollContainerRef.current && activeChatId) {
+      scrollPositions.current[activeChatId] = scrollContainerRef.current.scrollTop;
+    }
+  };
+
+  const handleSelectChat = (id) => {
+    if (scrollContainerRef.current && activeChatId) {
+      scrollPositions.current[activeChatId] = scrollContainerRef.current.scrollTop;
+    }
+    setActiveChatId(id);
+    setSidebarOpen(false);
   };
 
   const sendMessage = async () => {
@@ -213,7 +250,8 @@ export default function Home() {
         await saveMessage(activeChatId, "assistant", fullText);
       }
 
-      setMessagesCache((prev) => ({ ...prev, [activeChatId]: [...updatedMessages, { role: "assistant", content: fullText }] }));
+      const finalMessages = [...updatedMessages, { role: "assistant", content: fullText }];
+      setMessagesCache((prev) => ({ ...prev, [activeChatId]: finalMessages }));
     } catch (err) {
       setMessages([
         ...updatedMessages,
@@ -253,7 +291,7 @@ export default function Home() {
       <Sidebar
         chats={chats}
         activeChatId={activeChatId}
-        onSelectChat={(id) => { setActiveChatId(id); setSidebarOpen(false); }}
+        onSelectChat={handleSelectChat}
         onNewChat={handleNewChat}
         onDeleteChat={handleDeleteChat}
         onSignOut={signOut}
@@ -269,7 +307,7 @@ export default function Home() {
               ☰
             </button>
             <div>
-              <div style={{ fontWeight: "700", fontSize: "18px", color: "#f4f4f5" }}>{chatTitle}</div>
+              <div style={{ fontWeight: "700", fontSize: "22px", color: "#f4f4f5", fontFamily: "'Bebas Neue', sans-serif", letterSpacing: "0.5px" }}>{chatTitle}</div>
               <div style={{ fontSize: "11px", color: "#71717a", marginTop: "1px" }}>{chatSubtitle}</div>
             </div>
           </div>
@@ -279,7 +317,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
+        <div ref={scrollContainerRef} onScroll={handleScroll} style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
           {initialLoading ? (
             <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: "#71717a", fontSize: "14px" }}>
               Loading your chats...
