@@ -22,6 +22,7 @@ export default function Home() {
 
   const inputRef = useRef(null);
   const endRefs = useRef({});
+  const prevMsgCounts = useRef({});
 
   const scrollToBottom = useCallback((chatId, behavior) => {
     setTimeout(() => {
@@ -30,6 +31,17 @@ export default function Home() {
       }
     }, 50);
   }, []);
+
+  // Auto-scroll when new messages appear in active chat
+  useEffect(() => {
+    if (!activeChatId) return;
+    const msgs = allMessages[activeChatId] || [];
+    const prevCount = prevMsgCounts.current[activeChatId] || 0;
+    if (msgs.length > prevCount) {
+      scrollToBottom(activeChatId);
+    }
+    prevMsgCounts.current[activeChatId] = msgs.length;
+  }, [allMessages, activeChatId, scrollToBottom]);
 
   useEffect(() => {
     if (!user) return;
@@ -86,6 +98,7 @@ export default function Home() {
     const loaded = (data || []).map((m) => ({ role: m.role, content: m.content }));
     setAllMessages((prev) => ({ ...prev, [chatId]: loaded }));
     setLoadedChatIds((prev) => ({ ...prev, [chatId]: true }));
+    prevMsgCounts.current[chatId] = loaded.length;
     scrollToBottom(chatId, "instant");
   };
 
@@ -108,6 +121,7 @@ export default function Home() {
     setChats((prev) => [...prev, data]);
     setAllMessages((prev) => ({ ...prev, [data.id]: [] }));
     setLoadedChatIds((prev) => ({ ...prev, [data.id]: true }));
+    prevMsgCounts.current[data.id] = 0;
     setActiveChatId(data.id);
     setSidebarOpen(false);
   };
@@ -118,6 +132,7 @@ export default function Home() {
     setChats((prev) => prev.filter((c) => c.id !== chatId));
     setAllMessages((prev) => { const u = { ...prev }; delete u[chatId]; return u; });
     setLoadedChatIds((prev) => { const u = { ...prev }; delete u[chatId]; return u; });
+    delete prevMsgCounts.current[chatId];
     if (activeChatId === chatId) {
       const brainstorm = chats.find((c) => c.chat_type === "brainstorm");
       setActiveChatId(brainstorm?.id || null);
@@ -139,7 +154,6 @@ export default function Home() {
     setAllMessages((prev) => ({ ...prev, [activeChatId]: updatedMessages }));
     setInput("");
     setLoading(true);
-    scrollToBottom(activeChatId);
 
     await saveMessage(activeChatId, "user", userMessage.content);
 
@@ -288,7 +302,7 @@ export default function Home() {
 
         <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
           {initialLoading && (
-            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#71717a", fontSize: "14px" }}>
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#71717a", fontSize: "14px", zIndex: 10 }}>
               Loading your chats...
             </div>
           )}
