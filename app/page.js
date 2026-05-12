@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useAuth } from "./components/AuthProvider";
 import Sidebar from "./components/Sidebar";
 import LoginPage from "./login/page";
@@ -13,24 +13,23 @@ export default function Home() {
 
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
-  const [messages, setMessages] = useState([]);
+  const [allMessages, setAllMessages] = useState({});
+  const [loadedChatIds, setLoadedChatIds] = useState({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
 
-  const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const prevMessageCount = useRef(0);
-  const scrollContainerRef = useRef(null);
-  const messagesCacheRef = useRef({});
+  const endRefs = useRef({});
 
-  useEffect(() => {
-    if (messages.length > prevMessageCount.current) {
-      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-    prevMessageCount.current = messages.length;
-  }, [messages]);
+  const scrollToBottom = useCallback((chatId, behavior) => {
+    setTimeout(() => {
+      if (endRefs.current[chatId]) {
+        endRefs.current[chatId].scrollIntoView({ behavior: behavior || "smooth" });
+      }
+    }, 50);
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -40,8 +39,10 @@ export default function Home() {
   useEffect(() => {
     if (!activeChatId) return;
     try { localStorage.setItem("accepted_active_chat", activeChatId); } catch (e) {}
-    loadMessages(activeChatId);
-  }, [activeChatId]);
+    if (!loadedChatIds[activeChatId]) {
+      fetchMessages(activeChatId);
+    }
+  }, [activeChatId, loadedChatIds]);
 
   const loadChats = async () => {
     setInitialLoading(true);
@@ -61,7 +62,6 @@ export default function Home() {
 
     let savedChatId = null;
     try { savedChatId = localStorage.getItem("accepted_active_chat"); } catch (e) {}
-
     const savedChat = savedChatId && data?.find((c) => c.id === savedChatId);
     const brainstorm = data?.find((c) => c.chat_type === "brainstorm");
 
@@ -71,20 +71,7 @@ export default function Home() {
     setInitialLoading(false);
   };
 
-  const loadMessages = async (chatId) => {
-    if (messagesCacheRef.current[chatId]) {
-      setMessages(messagesCacheRef.current[chatId]);
-      prevMessageCount.current = messagesCacheRef.current[chatId].length;
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          if (scrollContainerRef.current) {
-            scrollContainerRef.current.scrollTop = scrollContainerRef.current.scrollHeight;
-          }
-        });
-      });
-      return;
-    }
-
+  const fetchMessages = async (chatId) => {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -96,44 +83,31 @@ export default function Home() {
       return;
     }
 
-    const loaded = (data || []).map((m) => ({
-      role: m.role,
-      content: m.content,
-    }));
-    messagesCacheRef.current[chatId] = loaded;
-    prevMessageCount.current = loaded.length;
-    setMessages(loaded);
+    const loaded = (data || []).map((m) => ({ role: m.role, content: m.content }));
+    setAllMessages((prev) => ({ ...prev, [chatId]: loaded }));
+    setLoadedChatIds((prev) => ({ ...prev, [chatId]: true }));
+    scrollToBottom(chatId, "instant");
   };
 
   const saveMessage = async (chatId, role, content) => {
-    const { error } = await supabase.from("messages").insert({
-      chat_id: chatId,
-      role,
-      content,
-    });
+    const { error } = await supabase.from("messages").insert({ chat_id: chatId, role, content });
     if (error) console.error("Error saving message:", error);
   };
 
   const handleNewChat = async (title, promptType) => {
-    const handoff = messages.slice(-10).map((m) => ({ role: m.role, content: m.content }));
+    const currentMsgs = allMessages[activeChatId] || [];
+    const handoff = currentMsgs.slice(-10).map((m) => ({ role: m.role, content: m.content }));
     const { data, error } = await supabase
       .from("chats")
-      .insert({
-        user_id: user.id,
-        chat_type: "essay",
-        title,
-        prompt_type: promptType,
-        handoff_context: handoff,
-      })
+      .insert({ user_id: user.id, chat_type: "essay", title, prompt_type: promptType, handoff_context: handoff })
       .select()
       .single();
 
-    if (error) {
-      console.error("Error creating chat:", error);
-      return;
-    }
+    if (error) { console.error("Error creating chat:", error); return; }
 
     setChats((prev) => [...prev, data]);
+    setAllMessages((prev) => ({ ...prev, [data.id]: [] }));
+    setLoadedChatIds((prev) => ({ ...prev, [data.id]: true }));
     setActiveChatId(data.id);
     setSidebarOpen(false);
   };
@@ -142,18 +116,15 @@ export default function Home() {
     await supabase.from("messages").delete().eq("chat_id", chatId);
     await supabase.from("chats").delete().eq("id", chatId);
     setChats((prev) => prev.filter((c) => c.id !== chatId));
-    delete messagesCacheRef.current[chatId];
+    setAllMessages((prev) => { const u = { ...prev }; delete u[chatId]; return u; });
+    setLoadedChatIds((prev) => { const u = { ...prev }; delete u[chatId]; return u; });
     if (activeChatId === chatId) {
       const brainstorm = chats.find((c) => c.chat_type === "brainstorm");
       setActiveChatId(brainstorm?.id || null);
-      setMessages([]);
     }
   };
 
   const handleSelectChat = (id) => {
-    if (activeChatId && messages.length > 0) {
-      messagesCacheRef.current[activeChatId] = [...messages];
-    }
     setActiveChatId(id);
     setSidebarOpen(false);
   };
@@ -162,18 +133,24 @@ export default function Home() {
     if (!input.trim() || loading || !activeChatId) return;
 
     const userMessage = { role: "user", content: input.trim() };
-    const updatedMessages = [...messages, userMessage];
-    setMessages(updatedMessages);
+    const currentMsgs = allMessages[activeChatId] || [];
+    const updatedMessages = [...currentMsgs, userMessage];
+
+    setAllMessages((prev) => ({ ...prev, [activeChatId]: updatedMessages }));
     setInput("");
     setLoading(true);
+    scrollToBottom(activeChatId);
 
     await saveMessage(activeChatId, "user", userMessage.content);
+
+    const ac = chats.find((c) => c.id === activeChatId);
+    const cid = activeChatId;
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: updatedMessages, userId: user.id, chatType: activeChat?.chat_type, chatTitle: activeChat?.title, chatId: activeChatId }),
+        body: JSON.stringify({ messages: updatedMessages, userId: user.id, chatType: ac?.chat_type, chatTitle: ac?.title, chatId: cid }),
       });
 
       if (!response.ok) throw new Error("Failed to get response");
@@ -185,16 +162,16 @@ export default function Home() {
       let buffer = "";
       let animating = false;
 
-      setMessages([...updatedMessages, { role: "assistant", content: "" }]);
+      setAllMessages((prev) => ({ ...prev, [cid]: [...updatedMessages, { role: "assistant", content: "" }] }));
 
       const animate = () => {
         if (displayedText.length < fullText.length) {
           const charsToAdd = Math.min(1, fullText.length - displayedText.length);
           displayedText = fullText.slice(0, displayedText.length + charsToAdd);
-          setMessages((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1] = { role: "assistant", content: displayedText };
-            return updated;
+          setAllMessages((prev) => {
+            const msgs = [...(prev[cid] || [])];
+            msgs[msgs.length - 1] = { role: "assistant", content: displayedText };
+            return { ...prev, [cid]: msgs };
           });
           requestAnimationFrame(animate);
         } else {
@@ -218,10 +195,7 @@ export default function Home() {
               const parsed = JSON.parse(data);
               if (parsed.text) {
                 fullText += parsed.text;
-                if (!animating) {
-                  animating = true;
-                  requestAnimationFrame(animate);
-                }
+                if (!animating) { animating = true; requestAnimationFrame(animate); }
               }
             } catch (e) {}
           }
@@ -232,24 +206,26 @@ export default function Home() {
         await new Promise((r) => setTimeout(r, 16));
         const charsToAdd = Math.min(1, fullText.length - displayedText.length);
         displayedText = fullText.slice(0, displayedText.length + charsToAdd);
-        setMessages((prev) => {
-          const updated = [...prev];
-          updated[updated.length - 1] = { role: "assistant", content: displayedText };
-          return updated;
+        setAllMessages((prev) => {
+          const msgs = [...(prev[cid] || [])];
+          msgs[msgs.length - 1] = { role: "assistant", content: displayedText };
+          return { ...prev, [cid]: msgs };
         });
       }
 
       if (fullText) {
-        await saveMessage(activeChatId, "assistant", fullText);
+        await saveMessage(cid, "assistant", fullText);
+        setAllMessages((prev) => {
+          const msgs = [...(prev[cid] || [])];
+          msgs[msgs.length - 1] = { role: "assistant", content: fullText };
+          return { ...prev, [cid]: msgs };
+        });
       }
-
-      const finalMessages = [...updatedMessages, { role: "assistant", content: fullText }];
-      messagesCacheRef.current[activeChatId] = finalMessages;
     } catch (err) {
-      setMessages([
-        ...updatedMessages,
-        { role: "assistant", content: "Something went wrong. Try again in a moment." },
-      ]);
+      setAllMessages((prev) => ({
+        ...prev,
+        [cid]: [...updatedMessages, { role: "assistant", content: "Something went wrong. Try again in a moment." }],
+      }));
     }
 
     setLoading(false);
@@ -275,9 +251,9 @@ export default function Home() {
     );
   }
 
-  if (!user) {
-    return <LoginPage />;
-  }
+  if (!user) return <LoginPage />;
+
+  const chatPanels = chats.filter((c) => loadedChatIds[c.id]);
 
   return (
     <div style={{ height: "100vh", display: "flex", background: "#0a0a0b", fontFamily: "'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", color: "#e4e4e7" }}>
@@ -310,63 +286,90 @@ export default function Home() {
           </div>
         </div>
 
-        <div ref={scrollContainerRef} style={{ flex: 1, overflowY: "auto", padding: "24px", display: "flex", flexDirection: "column", gap: "16px", maxWidth: "800px", width: "100%", margin: "0 auto" }}>
-          {initialLoading ? (
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", flex: 1, color: "#71717a", fontSize: "14px" }}>
+        <div style={{ flex: 1, position: "relative", overflow: "hidden" }}>
+          {initialLoading && (
+            <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "#71717a", fontSize: "14px" }}>
               Loading your chats...
             </div>
-          ) : messages.length === 0 ? (
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: "16px", opacity: 0.6 }}>
-              <img src="/tedbot.png" alt="Ted" style={{ width: "80px", height: "80px" }} />
-              <div style={{ fontSize: "20px", fontWeight: "600", color: "#f4f4f5" }}>{chatTitle}</div>
-              <div style={{ fontSize: "14px", color: "#71717a", textAlign: "center", maxWidth: "420px", lineHeight: "1.5" }}>
-                {activeChat?.chat_type === "brainstorm"
-                  ? "Your UC PIQ coach. Tell me about yourself and we'll find the stories that get you in."
-                  : "Let's work on your " + chatTitle + " essay."}
-              </div>
-              {activeChat?.chat_type === "brainstorm" && (
-                <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center", marginTop: "8px" }}>
-                  {["I'm applying to UCs this fall", "I'm a transfer student", "I already wrote some essays"].map((s) => (
-                    <button key={s} onClick={() => { setInput(s); setTimeout(() => inputRef.current?.focus(), 0); }} style={{ background: "#1e1e22", border: "1px solid #2e2e33", color: "#a1a1aa", padding: "8px 16px", borderRadius: "20px", fontSize: "13px", cursor: "pointer" }}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ) : (
-            messages.map((msg, i) => (
-              <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "10px" }}>
-                <div style={{ maxWidth: "75%" }}>
-                  <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px", textAlign: msg.role === "user" ? "right" : "left" }}>
-                    {msg.role === "user" ? studentName : "Ted"}
-                  </div>
-                  <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#16a34a" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
-                    {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
-                    {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
-                      <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
           )}
 
-          {loading && messages[messages.length - 1]?.role !== "assistant" && (
-            <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
-              <div style={{ maxWidth: "75%" }}>
-                <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px" }}>Ted</div>
-                <div style={{ padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "#1e1e22", display: "flex", gap: "6px", alignItems: "center" }}>
-                  <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out infinite" }} />
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.3s infinite" }} />
-                  <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.6s infinite" }} />
+          {chatPanels.map((chat) => {
+            const msgs = allMessages[chat.id] || [];
+            const isActive = chat.id === activeChatId;
+            const title = chat.chat_type === "brainstorm" ? "Main Chat" : (chat.title || "Essay");
+
+            return (
+              <div
+                key={chat.id}
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  overflowY: "auto",
+                  padding: "24px",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: "16px",
+                  visibility: isActive ? "visible" : "hidden",
+                  pointerEvents: isActive ? "auto" : "none",
+                }}
+              >
+                <div style={{ maxWidth: "800px", width: "100%", margin: "0 auto", display: "flex", flexDirection: "column", gap: "16px", flex: 1 }}>
+                  {msgs.length === 0 ? (
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1, gap: "16px", opacity: 0.6 }}>
+                      <img src="/tedbot.png" alt="Ted" style={{ width: "80px", height: "80px" }} />
+                      <div style={{ fontSize: "20px", fontWeight: "600", color: "#f4f4f5" }}>{title}</div>
+                      <div style={{ fontSize: "14px", color: "#71717a", textAlign: "center", maxWidth: "420px", lineHeight: "1.5" }}>
+                        {chat.chat_type === "brainstorm"
+                          ? "Your UC PIQ coach. Tell me about yourself and we'll find the stories that get you in."
+                          : "Let's work on your " + title + " essay."}
+                      </div>
+                      {chat.chat_type === "brainstorm" && (
+                        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", justifyContent: "center", marginTop: "8px" }}>
+                          {["I'm applying to UCs this fall", "I'm a transfer student", "I already wrote some essays"].map((s) => (
+                            <button key={s} onClick={() => { setInput(s); setTimeout(() => inputRef.current?.focus(), 0); }} style={{ background: "#1e1e22", border: "1px solid #2e2e33", color: "#a1a1aa", padding: "8px 16px", borderRadius: "20px", fontSize: "13px", cursor: "pointer" }}>
+                              {s}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    msgs.map((msg, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: msg.role === "user" ? "flex-end" : "flex-start", gap: "10px" }}>
+                        <div style={{ maxWidth: "75%" }}>
+                          <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px", textAlign: msg.role === "user" ? "right" : "left" }}>
+                            {msg.role === "user" ? studentName : "Ted"}
+                          </div>
+                          <div style={{ padding: "12px 16px", borderRadius: msg.role === "user" ? "16px 16px 4px 16px" : "16px 16px 16px 4px", background: msg.role === "user" ? "#16a34a" : "#1e1e22", color: msg.role === "user" ? "#fff" : "#d4d4d8", fontSize: "14px", lineHeight: "1.6", whiteSpace: "pre-wrap", wordBreak: "break-word" }}>
+                            {msg.role === "assistant" && msg.content.startsWith("[DOC]") ? msg.content.replace(/^\[DOC\]\s*/, "") : msg.content}
+                            {msg.role === "assistant" && msg.content.startsWith("[DOC]") && (
+                              <button onClick={() => { navigator.clipboard.writeText(msg.content.replace(/^\[DOC\]\s*/, "")); }} style={{ display: "block", marginTop: "8px", padding: "4px 10px", background: "#2e2e33", border: "none", color: "#71717a", borderRadius: "6px", fontSize: "11px", cursor: "pointer" }}>Copy</button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+
+                  {isActive && loading && (msgs.length === 0 || msgs[msgs.length - 1]?.role !== "assistant") && (
+                    <div style={{ display: "flex", gap: "10px", alignItems: "flex-start" }}>
+                      <div style={{ maxWidth: "75%" }}>
+                        <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px" }}>Ted</div>
+                        <div style={{ padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "#1e1e22", display: "flex", gap: "6px", alignItems: "center" }}>
+                          <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out infinite" }} />
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.3s infinite" }} />
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.6s infinite" }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={(el) => { endRefs.current[chat.id] = el; }} />
                 </div>
               </div>
-            </div>
-          )}
-
-          <div ref={messagesEndRef} />
+            );
+          })}
         </div>
 
         <div style={{ padding: "16px 24px 20px", borderTop: "1px solid #1e1e22", background: "#0f0f11" }}>
