@@ -32,15 +32,17 @@ export default function Home() {
     }, 50);
   }, []);
 
-  // Auto-scroll when new messages appear in active chat
+  // Auto-scroll when new messages appear OR when the last message grows (streaming)
   useEffect(() => {
     if (!activeChatId) return;
     const msgs = allMessages[activeChatId] || [];
-    const prevCount = prevMsgCounts.current[activeChatId] || 0;
-    if (msgs.length > prevCount) {
-      scrollToBottom(activeChatId);
+    const lastMsg = msgs[msgs.length - 1];
+    const signature = `${msgs.length}:${lastMsg?.content?.length || 0}`;
+    const prevSig = prevMsgCounts.current[activeChatId];
+    if (signature !== prevSig) {
+      scrollToBottom(activeChatId, "auto");
     }
-    prevMsgCounts.current[activeChatId] = msgs.length;
+    prevMsgCounts.current[activeChatId] = signature;
   }, [allMessages, activeChatId, scrollToBottom]);
 
   useEffect(() => {
