@@ -946,6 +946,7 @@ export async function POST(req) {
     chatContext;
 
   // Call Claude API with streaming
+  console.log("Incoming:", { userId, chatId, senderName, messageCount: messages?.length });
   const response = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
