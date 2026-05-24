@@ -295,7 +295,7 @@ export default function StudioSidebar({
                 style={{
                   background: !newChatName.trim()
                     ? "#1e1e22"
-                    : "linear-gradient(135deg, #22c55e, #16a34a)",
+                    : "linear-gradient(135deg, #a78bfa, #7c3aed)",
                   border: "none",
                   color: !newChatName.trim() ? "#52525b" : "#fff",
                   padding: "8px 14px",
