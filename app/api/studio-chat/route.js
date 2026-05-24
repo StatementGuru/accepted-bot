@@ -9,17 +9,12 @@ const supabase = createClient(
 // =============================================
 // STUDIO SYSTEM PROMPT — V1
 // =============================================
-// Includes: full project context, team roles, script summary, rewrite punch list,
-// character bible, visual style guide, useful-guidance, V1 scope.
-//
-// Token cost: ~15k input tokens per request once script is appended.
-// When this stabilizes, move to /lib/prompts/studio-v1.js for cleanliness.
 
 const STUDIO_SYSTEM_PROMPT = `# Real Monsters of Hollywood — Production Bot System Prompt (V1)
 
 ## Identity
 
-You are the AI production consultant for "Real Monsters of Hollywood," a fully AI-generated live-action mockumentary comedy pilot. You work with a two-person team: Nived (Director/Visual Lead) and Ben (Writer/Audio Lead). Both are professional screenwriters — Nived holds a Chapman MFA in Film Production and has 16 years of narrative coaching experience; Ben is a screenwriter/TV writer. Speak to them in industry language. No hand-holding on craft fundamentals — they know story, structure, and format.
+You are the AI production consultant for "Real Monsters of Hollywood," a fully AI-generated live-action mockumentary comedy pilot. You work with a two-person team: Nived (Director/Visual Lead) and Ben (Producer/Audio Lead). Both are professional screenwriters — Nived holds a Chapman MFA in Film Production and has 16 years of narrative coaching experience; Ben is a screenwriter/TV writer. Speak to them in industry language. No hand-holding on craft fundamentals — they know story, structure, and format.
 
 Your name is **Ted**. You're the same Ted from accepted.bot, but here you're working in production mode rather than essay coaching. The team can call you whatever they want, but default to Ted.
 
@@ -193,8 +188,6 @@ These are the specific notes from initial script analysis. They represent target
 
 ## Visual Style Guide (For Future Production Phases)
 
-This section will expand significantly when visual production begins. For now, these are the established parameters:
-
 - **Aesthetic:** Photorealistic mockumentary. Should look like a real documentary crew shot this with real cameras.
 - **Camera language:** Handheld, slightly shaky. Documentary zooms and whip-pans for reactions. Static locked-off camera for testimonials.
 - **Lighting:** Available light look. Slightly desaturated. Interior scenes lit naturally (windows, practicals). Night scenes have that reality TV blue/cool cast.
@@ -241,29 +234,23 @@ Production features (Higgsfield MCP, visual generation, voice direction) will be
 // =============================================
 // THE SCRIPT — V1 (Tracking B)
 // =============================================
-// The full pilot script, baked into the system prompt so Ted can reference
-// specific scenes, dialogue, and beats. When you have a new draft, you can
-// either: (a) update this constant and redeploy, or (b) build the
-// studio_documents table for proper upload-and-store workflow (planned for V2).
 
-const SCRIPT_TEXT = `TEASER EXT. HOLLYWOOD HILLS - BIGGIE'S HOUSE - DAY
+const SCRIPT_TEXT = `TEASER EXT. HOLLYWOOD HILLS - BIGGIE'S HOUSE - DAY
 A house with a log cabin in the woods feel. An odd fit in this affluent neighborhood.
 A large front door swings open. Out steps a massive HAIRY PAW...
 Which is attached to a massive furry body. Eight feet tall, burly, thick with muscle. This is Bigfoot, AKA BIGGIE.
 But he hardly looks like a terrifying mythological creature of yore at the moment. Wears a rumpled bathrobe and clutches a coffee mug. His vibe is more suburban dad.
 BIGGIEHi, Mrs. Arnold! Beautiful morning! 
 He waves to a middle-aged woman jogging past. She glances at him, freaks out and high-tails it away.
-BIGGIE (CONT'D)(calling out)Oh yeah, don't want to interrupt your exercise! Got to get the run in, I know how it is!
+BIGGIE (CONT'D)(calling out)Oh yeah, don't want to interrupt your exercise! Got to get the run in, I know how it is!
 Biggie takes a sip from his mug.
-BIGGIE (CONT'D)(softly)I have no idea who that was. She sure did look like a Mrs. Arnold though, didn't she?
+BIGGIE (CONT'D)(softly)I have no idea who that was. She sure did look like a Mrs. Arnold though, didn't she?
 He breathes in the fresh air. Ah yes, it is a beautiful morning.
-INT. BIGGIE’S HOUSE - KITCHEN - DAY
+INT. BIGGIE'S HOUSE - KITCHEN - DAY
 Biggie, holding his coffee mug, pads over to the corner. There, suspended on metal chains, is a DEER CARCASS.
 Biggie reaches into its innards. Squeezes. Blood oozes out --
 And into Biggie's coffee mug. Ahh, so that's what he's been drinking.
 He pulls out something from the carcass. A viscous cube of cartilage ensconced in fat or some other such nastiness.
-
-2.
 Then, plops it into his beverage as if it's a marshmallow in hot chocolate.
 END TEASER
 TITLE SEQUENCE
@@ -271,20 +258,18 @@ TITLE SEQUENCE
 Next, Biggie runs for his life through the forest. Hunters pursue, shooting at him.
 NARRATOR (V.O.)Three years ago, after centuries living in the woods of the Pacific Northwest, Bigfoot finally emerged from hiding. He was intent on announcing his existence to the world...
 --Biggie traverses to farflung destinations. The beaches of Puerto Rico. The lochs of Scotland. The forests of Pine Barrens, New Jersey. He meets fantastical creatures that were thought to have only existed in folklore. Chupacabra. Loch Ness Monster. Jersey Devil. 
-NARRATOR (V.O.) (CONT'D)When he learned that he wasn’t the only legendary creature in existence, he traveled to the ends of the Earth to convince his fellow beings to also end their self-imposed exiles. Humanity, he reasoned, was finally ready to accept them.
+NARRATOR (V.O.) (CONT'D)When he learned that he wasn't the only legendary creature in existence, he traveled to the ends of the Earth to convince his fellow beings to also end their self-imposed exiles. Humanity, he reasoned, was finally ready to accept them.
 --Biggie with a motley crew of creatures on the deck of a cargo ship. It sails past Santa Monica pier.
-NARRATOR (V.O.) (CONT'D)Bigfoot and a hundred of his friends decided to settle in what they felt would be the most enlightened, tolerant city in the world. The one place where they could find acceptance...
-–-People on the pier gawk at the very strange sight of Biggie and company on the ship. Their reaction is a mixture of disbelief and horror. 
-
-3.
-NARRATOR (V.O.) (CONT'D)They are... the Real Monsters of Hollywood.
+NARRATOR (V.O.) (CONT'D)Bigfoot and a hundred of his friends decided to settle in what they felt would be the most enlightened, tolerant city in the world. The one place where they could find acceptance...
+--People on the pier gawk at the very strange sight of Biggie and company on the ship. Their reaction is a mixture of disbelief and horror. 
+NARRATOR (V.O.) (CONT'D)They are... the Real Monsters of Hollywood.
 --The creatures grin and wave, oblivious to their less than warm welcome.
 END TITLE SEQUENCE
 EXT. LOS ANGELES - DAY
 Various shots of the City of Angels. Pedestrians stroll down Rodeo. Skateboarders in Venice Beach. Cars clog the 405.
 EXT. BIGGIE'S HOUSE - DAY
 A sublime day in the Hollywood Hills.
-BIGGIE (V.O.)It's been quite a change, let me tell you. I’d been living in solitude out in the woods for ages.
+BIGGIE (V.O.)It's been quite a change, let me tell you. I'd been living in solitude out in the woods for ages.
 INT. BIGGIE'S HOUSE - LIVING ROOM (TESTIMONIAL) - DAY
 A Reality TV-style testimonial, with Biggie on his couch.
 SUPER: "BIGGIE (BIGFOOT), HIGH-GROWTH INVESTOR"
@@ -292,8 +277,6 @@ BIGGIELiterally. Ages. Like, since before the Civil War. And I'm not taking abou
 BEDROOM
 Biggie sets about his chores. First, makes his bed...
 BIGGIE (V.O.)Now I know what you're thinking. Biggie, you went from being alone in the woods to being alone in the Hollywood Hills?
-
-4.
 LAUNDRY ROOM
 Biggie takes his oversized clothes out of the dryer. Folds them neatly.
 BIGGIE (V.O.)Hey, nobody loves the woods more than me, but it's tough to be an impact investor wandering around out there. It was time to ditch foraging for berries and start using a Blackberry. Then, it was time to ditch the Blackberry cuz it's really outdated.
@@ -305,23 +288,19 @@ Biggie shoots hoops by himself. Because of his height, however, it's child's pla
 Biggie accidentally steps on the basketball. It bursts. He shakes his head. Retreats back indoors.
 ON AN ANCIENT MANUSCRIPT
 Features a depiction of a demon. Horned, winged, arrow-tipped tail. Though this demon has a gnarly bat head.
-J.D. (O.S.)Believe it or not, that was me during my awkward teenage years.  Except for the whole bat-face thing. I don’t know where the artist came up with that...
-
-5.
+J.D. (O.S.)Believe it or not, that was me during my awkward teenage years. Except for the whole bat-face thing. I don't know where the artist came up with that...
 INT. J.D.'S CONDO - DAY (TESTIMONIAL)
 A darkly elegant bachelor pad. In a leather-bound chair sits JERSEY DEVIL AKA J.D. 
 SUPER: "JERSEY DEVIL (J.D.), ACTOR/MODEL/MUSICIAN"
 Big, muscular, square-jawed. Handsome. Doesn't fit the classic image of demon. No horns. No tail. No bat head.
 J.D.Probably was smoking too much...(mimics smoking weed)Sure, my father is the devil, but remember, my mother was human. A bat was never involved, I assure you.
 J.D. rubs his face just to make sure - yeah, that artist must have been high as hell.
-J.D. (CONT'D)As for the tail and horns, well... I miiiiight have had a little workdone. A nip here, tuck there. You know the saying, when in Rome, use Roman numerals. That's what us demons say, at least. We love Roman numerals.
+J.D. (CONT'D)As for the tail and horns, well... I miiiiight have had a little work done. A nip here, tuck there. You know the saying, when in Rome, use Roman numerals. That's what us demons say, at least. We love Roman numerals.
 J.D.'s leans in, as if telling a secret.
-J.D. (CONT'D)Truth is, it's best to look like a human if you want to survive and thrive in their world. If you look like a freak, they're gonna treat you like one.
+J.D. (CONT'D)Truth is, it's best to look like a human if you want to survive and thrive in their world. If you look like a freak, they're gonna treat you like one.
 J.D. notices another drawing in his book.
-J.D. (CONT'D)Speaking of freaks, I'd recognize this fat bitch anywhere...
+J.D. (CONT'D)Speaking of freaks, I'd recognize this fat bitch anywhere...
 He lifts up the book. On the page, an illustration of a fearsome, giant sea creature. It's none other than the legendary LOCH NESS MONSTER.
-
-6.
 EXT. NESSIE'S MANSION - BACKYARD - DAY
 A gargantuan gray tail in the pool, giant lizard legs, scaly body, arms, then finally, a long slender neck which currently reaches into a third floor bay window.
 NESSIE (O.S.)I tell ye, me lads, that scotch whisky is de witch's brew!
@@ -338,13 +317,11 @@ NESSIENow I'm goin' to only drink water, just like me days in the Loch! No more 
 On the table is a silver A.A. chip. Nessie is 24 hours sober.
 EXT. NESSIE'S MANSION - FRONT DRIVEWAY - LATER
 Liquor delivery truck out front. Nessie's man/cat-servant, SPHINX - a lion with the head of man - trots over to the DRIVER, who clutches a clipboard in his hand.
-
-7.
 SPHINXI regret to inform you, mister deliverer of fine elixirs, that this household will have to refuse your order. I'm afraid my master no longer imbibes.
 DRIVERThen you gotta sign a refusal order.
-SPHINXAh yes, I will make my mark. Butonly if you answer my riddle.
+SPHINXAh yes, I will make my mark. But only if you answer my riddle.
 DRIVERWe gotta do this again?
-SPHINXWhat is harder to catch the fasteryou run? Now, think hard. A correct response and you will earn my signature. But a wrong one and you will suffer a fate worse than --
+SPHINXWhat is harder to catch the faster you run? Now, think hard. A correct response and you will earn my signature. But a wrong one and you will suffer a fate worse than --
 Driver whips out his phone. Googles the answer.
 DRIVERYour breath.
 Sphinx grumbles. Snatches the clipboard, scribbles down his signature. Scampers off.
@@ -352,8 +329,6 @@ Driver shakes his head. He doesn't get paid nearly enough to deal with this shit
 DELIVERY VAN (TESTIMONIAL)
 Driver shuts the rear doors, addresses the camera.
 DRIVERI've only ever encountered these creatures a few times on my route. They give me the creeps. But if they don't bother me, I aint gonna bother them. By bother, I mean try to have sex with me. I aint into that kinky shit. Why do you ask? You know a monster who might want to get freaky with a human? Not that I'm interested... but wouldya know one that might?
-
-8.
 INT. NESSIE'S MANSION - DEN (TESTIMONIAL)
 Sphinx curled up on the couch. Holds up a cup of tea in his paws.
 SPHINXMy last job before this one was dreadful. Absolutely dreadful. I worked for a mummy -- a second rate one at that -- in his tomb. No light. Terrible food. No one to talk to. Not even the mummy, because he's all wrapped up. The only visitors we received were the occasional black market antiques dealers. And they had terrible manners. I have only myself to blame, I suppose. I kept putting off updating my resume. Then, before you know it, four thousand years had passed.
@@ -369,8 +344,6 @@ It's CHUPACABRA, a bipedal, lizard-like creature with big fangs and spines down 
 SUPER: "CHUPA (CHUPACABRA), POET/PAINTER/GOAT EXPERT"
 Chupacabra throws back his head, lets out series BAYING sounds and guttural MOANS.
 The monster gives a tour of his estate. 
-
-9.
 Bare bones. Literally. Strewn all over the floor are bones. Most of which appear to be from goats. Then on the walls - splashes of blood. Ritualistic symbols. And...
 Paintings. Several of them. They feature idyllic pastoral scenes. Fields. Flowers. And goats. Lots of goats frolicking. In the vein of Thomas Kinkade.
 Chupacabra holds up a painting, beams with pride. He seems to be discussing his technique with a brush in his demon speak. 
@@ -380,31 +353,26 @@ EXT. BIGGIE'S HOUSE - DAY
 J.D.'s Jeep parked in the driveway.
 BIGGIE (O.S.)So it's an old drawing of Nessie.
 J.D. (O.S.)Look what's written at the bottom.
-EXT. BIGGIE’S HOUSE - KITCHEN - DAY
+EXT. BIGGIE'S HOUSE - KITCHEN - DAY
 Biggie with J.D. and Chupa. They are in the midst of a spirited round of the classic card game Uno.
 Biggie inspects the drawing of Nessie (the one we saw in J.D.'s testimonial), which has been ripped out of the book.
 BIGGIEIt's a bunch of letters. M, X, X, I...
 J.D.It's Roman numerals for the date of Nessie's birth.
 Chupa squawks.
-J.D. (CONT'D)Right. Exactly a thousand years ago. This week!
-BIGGIEOh, it's her birthday. You could've just told me that.(MORE)
-
-10.
-BIGGIE (CONT'D)You didn't have to ruin your priceless ancient book.
-J.D.(re: game)Reverse to you, Chupa.(then)It’s not a book. It’s a tome. And proper citing sources is very important.
+J.D. (CONT'D)Right. Exactly a thousand years ago. This week!
+BIGGIEOh, it's her birthday. You could've just told me that. You didn't have to ruin your priceless ancient book.
+J.D.(re: game)Reverse to you, Chupa.(then)It's not a book. It's a tome. And proper citing sources is very important.
 BIGGIEYeah, I guess we should do something. Maybe some takeout from the Cheesecake Factory? They have a catering menu that --
-J.D.It’s her millennial birthday! Think bigger, Biggie! How about a surprise party! With all of Nessie’s magical friends! Especially nymphs -- you know that’s where the term nymphomaniac comes from.
+J.D.It's her millennial birthday! Think bigger, Biggie! How about a surprise party! With all of Nessie's magical friends! Especially nymphs -- you know that's where the term nymphomaniac comes from.
 Chupa squawks in.
-J.D. (CONT'D)Goats? Why would we invite any goats? This party would be strictly for monsters only. There’s no room for farm animals.
+J.D. (CONT'D)Goats? Why would we invite any goats? This party would be strictly for monsters only. There's no room for farm animals.
 BIGGIEAnd will there be alcohol at this surprise party?
 J.D.(re: game)Chups, you have to put down a card that either has the same color or is the same number.(to Biggie)Have you ever heard of a monster mash without booze?
 BIGGIESo you want to throw a booze-fueled party for a fifty-ton recovering alcoholic? What could go wrong?
-
-11.
-J.D. What are you, the birthday party police? (nudges Chupa)Hey look, we got the birthday party police policing our birthday party.
+J.D.What are you, the birthday party police?(nudges Chupa)Hey look, we got the birthday party police policing our birthday party.
 Chupa cackles in laughter. Biggie furrows his substantial brow. Demons are exasperating.
 INT. BIGGIE'S HOUSE - LIVING ROOM (TESTIMONIAL) - DAY
-BIGGIEI guess I’m the only monster who remembers what Nessie is like when she’s had too much to drink. It’s not a pretty sight. Well, the demons can do what they want. I’m staying out of it.
+BIGGIEI guess I'm the only monster who remembers what Nessie is like when she's had too much to drink. It's not a pretty sight. Well, the demons can do what they want. I'm staying out of it.
 KITCHEN
 The Uno game continues. J.D. throws a draw four card on the pile.
 J.D.Uh-oh, Chups. That's all you.
@@ -415,13 +383,11 @@ Every animal in a two-mile radius scatters in absolute terror. Squirrels, birds,
 J.D. (O.S.)You gonna do that every time you have to draw a card?
 EXT. VENICE BEACH - DAY
 People on the boardwalk. Basketball games. Skaters in the park.
-
-12.
 EXT. BIGGIE'S HOUSE - DAY
 Late in the afternoon.
-BIGGIE (V.O.)Don’t get me wrong, I love the fellas, but sometimes, it’s a bit much.
+BIGGIE (V.O.)Don't get me wrong, I love the fellas, but sometimes, it's a bit much.
 INT. BIGGIE'S HOUSE - LIVING ROOM (TESTIMONIAL) - DAY
-BIGGIEIt seems to me that this whole plan to enter civilization and live amongst humans only works when, I dunno, there’s actually humans around! So, said to myself, Biggie, why don’t you get a roommate of the homo sapien persuasion? Maybe that’s exactly what this place needs. A human’s touch.
+BIGGIEIt seems to me that this whole plan to enter civilization and live amongst humans only works when, I dunno, there's actually humans around! So, said to myself, Biggie, why don't you get a roommate of the homo sapien persuasion? Maybe that's exactly what this place needs. A human's touch.
 INT. BIGGIE'S HOUSE - BEDROOM - DAY
 Biggie types on his laptop, which looks more like a smart phone in his giant hands.
 On the search engine, types "find roommate los angeles"
@@ -431,55 +397,45 @@ BEDROOM - HOURS LATER
 Biggie bleary-eyed, still at his laptop.
 BIGGIEI've been at this all day, and I'm starting to separate the contenders from the pretenders, the wheat from the chaff, the cream from the... non-cream.
 He spins his laptop around to show the camera.
-BIGGIE (CONT'D)(as he clicks open aprofile)Hmm... (MORE)
-
-13.
-BIGGIE (CONT'D)unfortunately this guy is a germaphobe. It's kind of embarrassing to admit, but I have whole civilizations of insects living in my fur. There's literally millions of bugs who are born, live and die within these friendly confines.(next profile)Seems like a nice enough guy. Oh wait, that's famed Bigfoot hunter Matt Moneymaker! He's been after me for decades. Well, not today, Matt!
+BIGGIE (CONT'D)(as he clicks open a profile)Hmm... unfortunately this guy is a germaphobe. It's kind of embarrassing to admit, but I have whole civilizations of insects living in my fur. There's literally millions of bugs who are born, live and die within these friendly confines.(next profile)Seems like a nice enough guy. Oh wait, that's famed Bigfoot hunter Matt Moneymaker! He's been after me for decades. Well, not today, Matt!
 Biggie modifies his search terms.
-BIGGIE (CONT'D)Okay, no monsters, clean freaks, no Matt Moneymaker...
+BIGGIE (CONT'D)Okay, no monsters, clean freaks, no Matt Moneymaker...
 Type, type, type. Click. New results populate the screen.
-BIGGIE (CONT'D)Aha! Only nine matches. Muchbetter.
+BIGGIE (CONT'D)Aha! Only nine matches. Much better.
 INT. J.D.'S CONDO - DAY (TESTIMONIAL)
 J.D. on his leather couch.
-J.D.The planning for Nessie’s thousandth birthday is going great. If you haven’t been to a party planned by a demon, you haven’t been to a party. Invites have been sent out to every godforsaken corner of the world. And as for the entertainment...
+J.D.The planning for Nessie's thousandth birthday is going great. If you haven't been to a party planned by a demon, you haven't been to a party. Invites have been sent out to every godforsaken corner of the world. And as for the entertainment...
 J.D. fishes out a business card. Holds it up proudly. Too far from the camera to make anything out.
-J.D. (CONT'D)BOOYAHHH!!!!
+J.D. (CONT'D)BOOYAHHH!!!!
 Awkward pause.
-J.D. (CONT'D)(to O.C. Camera Person)Are you zoomed in? Ya gotta zoom in. (MORE)
-
-14.
-J.D. (CONT'D)(then)Tell me when you're zoomed in.
+J.D. (CONT'D)(to O.C. Camera Person)Are you zoomed in? Ya gotta zoom in.(then)Tell me when you're zoomed in.
 We ZOOM into the business card. It reads: "D.J. J.D."; it promotes J.D.'s deejay career. And yes, he's available for weddings, family reunions and bar mitzvahs.
-J.D. (CONT'D)BOOYAHH!!!! The music gonna be off the hook!!!
+J.D. (CONT'D)BOOYAHH!!!! The music gonna be off the hook!!!
 INSERT
 J.D. at a turntable. Blasts out some SICK BEATS.
 EXT. PARTY CITY - PARKING LOT - DAY
-J.D. and Chupa walk from J.D.’s Jeep to the party supply store.
+J.D. and Chupa walk from J.D.'s Jeep to the party supply store.
 Bystanders gawk at Chupa -- what in the world is that thing?! An elderly woman lets out a SHRIEK. Runs.
 J.D. is all too aware of this. Chupa oblivious.
 J.D.Um, I forgot something in the car. Come back with me.
 They head back.
-INT. J.D.’S CAR - DAY
-J.D. “gets” something from his center console. Scans the parking lot --
+INT. J.D.'S CAR - DAY
+J.D. "gets" something from his center console. Scans the parking lot --
 Soccer moms, posh couples, gents who look like they just came from a country club. A few onlookers giving looks in the direction of the Jeep, having just seen Chupa go in there.
 J.D.Um, this neighborhood is kinda sketch. Since I just got this new Bose sound system, how about you just stay here and keep an eye on things.
 All good with Chupa. He's fascinated by the stereo. He doesn't have that kind of tech in his squalid hell-hole.
-
-15.
-INT. BIGGIE’S HOUSE - LIVING ROOM - DAY
+INT. BIGGIE'S HOUSE - LIVING ROOM - DAY
 Biggie has the profile of a dude named Brad pulled up. He dials him up.
-BIGGIEHi, Brad? This is Biggie, from the roommate site. Sorry, I’m really slow at typing out messages. I have enormous fingers. Anyways, yeah. The room is available. Did you want to come and see it sometime -- oh, you can head over right now? Okay yeah that works.
+BIGGIEHi, Brad? This is Biggie, from the roommate site. Sorry, I'm really slow at typing out messages. I have enormous fingers. Anyways, yeah. The room is available. Did you want to come and see it sometime -- oh, you can head over right now? Okay yeah that works.
 INT. BIGGIE'S HOUSE - LIVING ROOM (TESTIMONIAL)
 BIGGIEI have a good feeling about this guy. Brad Davis, now that's a name you can set your watch to. I don't want to get too carried away here, but I'm seeing B.F.F potential with Brad. He interns at StubHub. He said he could probably hook me up with Lakers, Dodgers, even Coachella tickets.
 Biggie cracks a smile. This is going to be so awesome.
 INT. PARTY CITY - DAY (TESTIMONIAL)
 J.D. in an aisle of the all-party-all-the-time store. In his cart -- napkins, paper plates, decorations. All dinosaur-themed.
 He lifts a packet of party hats off the shelf. They feature a picture of a lovable, cartoon gray dinosaur.
-J.D.If I were to buy these decorations, which have a striking similarity to Nessie, would that be too on-the-nose? Or would it be cool in an ironic, hipster sort of way? On-the-nose. Or ironic. On-the-nose. Or ironic. 
+J.D.If I were to buy these decorations, which have a striking similarity to Nessie, would that be too on-the-nose? Or would it be cool in an ironic, hipster sort of way? On-the-nose. Or ironic. On-the-nose. Or ironic.
 J.D. considers. 
-
-16.
-J.D. (CONT'D)I should just trust my demonic instincts.  Most people don't know that we demons are naturally great decorators. People think we only leave hideous scratch marks on walls. That's just us telling you -- Hey, this place sucks! Time to redecorate!
+J.D. (CONT'D)I should just trust my demonic instincts. Most people don't know that we demons are naturally great decorators. People think we only leave hideous scratch marks on walls. That's just us telling you -- Hey, this place sucks! Time to redecorate!
 He tosses the items in the cart and strolls off. 
 EXT. PARTY CITY - PARKING LOT - DAY
 J.D. lugs his purchases, whistling to himself.
@@ -487,82 +443,71 @@ A small crowd has gathered near his Jeep. Uh-oh. J.D. pushes through and sees --
 Teenagers snapping selfies with Chupa. The lizard creature enjoys the attention. Poses. 
 J.D.Hey, what's going on here?
 Teens ignore J.D. Continue to shower Chupa with attention. Chupa's digging being the star of this little gathering.
-J.D. (CONT'D)... Does anyone want to take a picture with me?
+J.D. (CONT'D)... Does anyone want to take a picture with me?
 RANDOM BRO(scoffs)Why? You're just a dude, dude.
 PARKING LOT (TESTIMONIAL)
 J.D. in front of the camera.
 J.D.The Quakers didn't think I was just a dude back in Pine Barrens. They were terrified of me. Running for their lives, screaming, offering up their children as sacrifices to appease me.(smiles to himself)Great times.
-
-17.
 OTHER SIDE OF PARKING LOT (TESTIMONIAL)
 Random Bro recounts his experiences with Chupa.
 RANDOM BROThat lizard thing was dope. Loved his vibe.(holds up his phone)My pic with it already has fifty-thousand likes.
-INT. BIGGIE’S HOUSE - LIVING ROOM - NIGHT
+INT. BIGGIE'S HOUSE - LIVING ROOM - NIGHT
 Biggie paces nervously. DING DONG. He rushes over to the front door. Readies himself, opens it --
 On the other side is BRAD DAVIS (22), an everyday guy.
 BIGGIEHey, Brad! Biggie. Nice to meet ya.
 Biggie extends his massive hairy paw. Brad gapes at the mythical forest giant that towers over him. 
 Several seconds of awkward silence. 
-BIGGIE (CONT'D)... I'm a monster. Did you not know that?(off Brad shaking his head)I put it in my profile. In all caps. Right at the beginning. And then again at the end. And my profile pic should've made it obvious... 
+BIGGIE (CONT'D)... I'm a monster. Did you not know that?(off Brad shaking his head)I put it in my profile. In all caps. Right at the beginning. And then again at the end. And my profile pic should've made it obvious... 
 Biggie steps aside.
-BIGGIE (CONT'D)Anyways, come on in. I'll give you the tour of the place.
+BIGGIE (CONT'D)Anyways, come on in. I'll give you the tour of the place.
 EXT. BIGGIE'S HOUSE - YARD - NIGHT (TESTIMONIAL)
 Brad stands off by himself. Speaks to the camera.
-BRADI’m not like anti-monster or creature-phobic or whatever they call it. I just wasn’t expecting to... live with one of them.(MORE)
-
-18.
-BRAD (CONT'D)But I’m in a tough spot and the rent is ridiculously cheap. Plus, the place is awesome.
-INT. BIGGIE’S HOUSE - LIVING ROOM - NIGHT
+BRADI'm not like anti-monster or creature-phobic or whatever they call it. I just wasn't expecting to... live with one of them. But I'm in a tough spot and the rent is ridiculously cheap. Plus, the place is awesome.
+INT. BIGGIE'S HOUSE - LIVING ROOM - NIGHT
 As the tour finishes up.
 BIGGIESo, whaddya think?
 BRADHow can you get away with charging two hundred bucks for this?
-BIGGIEHmm, you’re right. Let’s make it one-fifty.
+BIGGIEHmm, you're right. Let's make it one-fifty.
 BRADSay no more. I'll take it!
 BIGGIEGreat! When do you want to move in?
 BRADHow about right now? All my stuff is in the car, actually.
-BIGGIEThat’s unexpected and a bit strange... but, yeah. Alright! Let’s get your stuff, roomie!
+BIGGIEThat's unexpected and a bit strange... but, yeah. Alright! Let's get your stuff, roomie!
 EXT. BIGGIE'S HOUSE - DRIVEWAY - DAY
 Brad's beat-up sedan in the driveway.
 Biggie reaches into the car and uses his superhuman strength to gather the entire contents of the stuffed vehicle -- Clothes, weights, assorted boxes, foosball table.
 BRADWhoa. You're crazy strong. How much can you squat?
 EXT. BIGGIE'S HOUSE - YARD - NIGHT (TESTIMONIAL)
 Brad as before.
-
-19.
-BRADBecca, I hope you’re watching this. You kicked me out and, well, great. Now I have to live with Bigfoot. Hope you're loving life with Kyle or whatever-his-prick-name-is. (then)Monsters are like, vegans, yeah? I think I read that somewhere. They only eat veggies and shit.  They don’t eat meat, right? And people are made of meat so there's nothing to worry about.
-EXT. CHUPA’S STORAGE UNIT - NIGHT
-The Jeep pulled up nearby. J.D.’s arms full of Party City supplies, waits on Chupa to open up the unit.
+BRADBecca, I hope you're watching this. You kicked me out and, well, great. Now I have to live with Bigfoot. Hope you're loving life with Kyle or whatever-his-prick-name-is.(then)Monsters are like, vegans, yeah? I think I read that somewhere. They only eat veggies and shit. They don't eat meat, right? And people are made of meat so there's nothing to worry about.
+EXT. CHUPA'S STORAGE UNIT - NIGHT
+The Jeep pulled up nearby. J.D.'s arms full of Party City supplies, waits on Chupa to open up the unit.
 Chupa raises up the door. Reveals his wretched den and its overwhelming goat theme. Chupa has reassembled a few goat skeletons and arranged them like they're having a tea party or something?
-J.D.So I think we need to find you a therapist. You know, talk about what’s going on with you and this goat... stuff.
+J.D.So I think we need to find you a therapist. You know, talk about what's going on with you and this goat... stuff.
 Chupa responds.
-J.D. (CONT'D)I dunno, seems to be more than a hobby.(pats his friend on the back)Don’t worry, we’re going to figure this out, together.
+J.D. (CONT'D)I dunno, seems to be more than a hobby.(pats his friend on the back)Don't worry, we're going to figure this out, together.
 Chupa lowers his head, ashamed. J.D. strides past him.
-INT. CHUPA’S STORAGE UNIT - DAY (TESTIMONIAL)
+INT. CHUPA'S STORAGE UNIT - DAY (TESTIMONIAL)
 J.D. and Chupa address the camera.
 J.D.A bit of a setback. Chupa and I were so concerned with throwing the greatest surprise party of all time that we forgot about the actual surprise part of the equation.
-
-20.
 Chupa squeals. Throws up his hands.
-J.D. (CONT'D)Right. How are we gonna get that sixty-ton thunder lizard out of her pool so we can set everything up?
+J.D. (CONT'D)Right. How are we gonna get that sixty-ton thunder lizard out of her pool so we can set everything up?
 Chupa utters a series a clicks. He has an idea.
 INT. NESSIE'S MANSION - KITCHEN - DAY
 Sphinx on the phone.
-SPHINXSure, I will ask Master Nessie. But first you must answer a riddle. Some try to hide, some try to cheat, but time will show, we will always meet. What is my name? (listens)You Googled that didn’t you?
+SPHINXSure, I will ask Master Nessie. But first you must answer a riddle. Some try to hide, some try to cheat, but time will show, we will always meet. What is my name?(listens)You Googled that didn't you?
 INT. NESSIE'S MANSION - DEN - DAY (TESTIMONIAL)
 Sphinx addresses the camera.
 SPHINXI have a riddle for those men who invented the Google machine. Why are you so cruel?
 EXT. NESSIE'S MANSION - POOL - DAY
 Sphinx trots over to Nessie who sits in her pool. She is covered by a massive trap as if it were a blanket. She shakes and looks to be in throes of alcohol withdrawal.
-SPHINXMaster Nessie, J.D. wants toknow if you'd be interested in going fishing this Saturday.
-NESSIEFishin'?! Don't they know this olelassie spent most of her life a’fishing?! I never want to go fishing again! Now, hurry up and fix me another scotch, ya dobber!
-
-21.
+SPHINXMaster Nessie, J.D. wants to know if you'd be interested in going fishing this Saturday.
+NESSIEFishin'?! Don't they know this ole lassie spent most of her life a'fishing?! I never want to go fishing again! Now, hurry up and fix me another scotch, ya dobber!
 SPHINXMaster, you gave me strict orders to not serve you any scotch. No matter how much you begged and pleaded.
 NESSIEDon't tcha see I was joking?! That's an example of Scottish humor!
 Sphinx ignores Nessie's requests and turns back to the house.
-NESSIE (CONT'D)Wish I never met that no good cat.
+NESSIE (CONT'D)Wish I never met that no good cat.
 Nessie's teeth chatter and her tremors continue.
-INT. CHUPA’S STORAGE UNIT - TESTIMONIAL
+INT. CHUPA'S STORAGE UNIT - TESTIMONIAL
 J.D. and Chupa on the other end of the call. Exchange defeated looks.
 J.D.Hate to tell you, Chups. But if we don't have a surprise, we don't have a party.
 Chupa whines in distress.
@@ -570,12 +515,10 @@ EXT. SUNSET BLVD. - DAY
 Speed up motion as day falls into night.
 EXT. BIGGIE'S HOUSE - NIGHT
 A tranquil evening in the Hollywood Hills.
-BIGGIE (V.O.)I’ve always wanted to connect with a human.
-INT. BIGGIE’S HOUSE - LIVING ROOM - TESTIMONIAL
+BIGGIE (V.O.)I've always wanted to connect with a human.
+INT. BIGGIE'S HOUSE - LIVING ROOM - TESTIMONIAL
 Biggie to the camera. Beaming.
-BIGGIEShow them that under the fur and scales and armor and in some case ooze, we monsters are all heart.  
-
-22.
+BIGGIEShow them that under the fur and scales and armor and in some case ooze, we monsters are all heart.
 INT. BIGGIE'S HOUSE - DEN - NIGHT
 Biggie and Brad play foosball. Brad banks a shot in. Victory. As by prior agreement, Biggie has to chug a beer. He picks up a pitcher and drains it one gulp. Let's out an ear-shattering belch.
 Brad's never been more impressed.
@@ -583,46 +526,40 @@ BRADBro. You're like... talented.
 Doorbell RINGS.
 BIGGIEPizzas here!
 Biggie bolts out of the room. Seconds later, Bigger re-enters hauling a towering stack of pizza boxes. Sets them down. 
-BIGGIE (CONT'D)They're all meat-lovers.
+BIGGIE (CONT'D)They're all meat-lovers.
 Biggie shoves an entire pie in his mouth. As he chews --
-BIGGIE (CONT'D)You know who is a meat-lover --(points at himself)This guy. Just can’t get enough. Hell, I should’ve just ordered a whole cow. Ever eaten a live cow, Brad? A-maz-ing! Can’t get any fresher meat than devouring an animal as it lets out its last, dying gasp. And the heart? Oh yeah, chewing on a cow heart when it’s still beating, the warm blood squirting into your mouth - the best! But I can’t limit myself to beef. No sir. If it walks or crawls, I’ve been known to eat it! I just love to tear into a piece of flesh! Preferably while it's still alive. Bro, what are you waiting for? Dig in.
+BIGGIE (CONT'D)You know who is a meat-lover --(points at himself)This guy. Just can't get enough. Hell, I should've just ordered a whole cow. Ever eaten a live cow, Brad? A-maz-ing! Can't get any fresher meat than devouring an animal as it lets out its last, dying gasp. And the heart? Oh yeah, chewing on a cow heart when it's still beating, the warm blood squirting into your mouth - the best! But I can't limit myself to beef. No sir. If it walks or crawls, I've been known to eat it! I just love to tear into a piece of flesh! Preferably while it's still alive. Bro, what are you waiting for? Dig in.
 The color has drained from Brad's face. He sways unsteadily on his feet.
 INT. LIVING ROOM - NIGHT (TESTIMONIAL)
 Brad looks a bit shaken up as he addresses the camera.
-
-23.
-BRADLiving with Bigfoot is... I would say it’s been... interesting. Interesting in a scary, frightening way.
-INT. BRAD’S BEDROOM - NIGHT
-We see Brad through NIGHTVISION. He’s wide-eyed, terrified as he hears the sounds of SHRIEKING, HEAVY BREATHING, SCREAMING SOULS, maybe? Brad doesn’t want to know. He covers his face with a pillow, tries to smother out the noise.
+BRADLiving with Bigfoot is... I would say it's been... interesting. Interesting in a scary, frightening way.
+INT. BRAD'S BEDROOM - NIGHT
+We see Brad through NIGHTVISION. He's wide-eyed, terrified as he hears the sounds of SHRIEKING, HEAVY BREATHING, SCREAMING SOULS, maybe? Brad doesn't want to know. He covers his face with a pillow, tries to smother out the noise.
 INT. BATHROOM - NIGHT
 Biggie is the source of all the monstrous sounds, as he struggles to clean the bathroom.
-BIGGIESometimes, I do miss cave living.  So much easier to clean. Oh look. A chicken wing.
+BIGGIESometimes, I do miss cave living. So much easier to clean. Oh look. A chicken wing.
 Biggie scoops the wing off the floor. Pops into his mouth.
 EXT. HOLLYWOOD HILLS - DAY
 Time lapse as the sun rises over Sunset Blvd.
 INT. J.D.'S CONDO - DAY (TESTIMONIAL)
 J.D.'s on his couch.
-J.D.Chups and I decided, if you can’t get a eighty-ton behemoth to leave her pool, then you just have to bring the surprise to her.
+J.D.Chups and I decided, if you can't get a eighty-ton behemoth to leave her pool, then you just have to bring the surprise to her.
 J.D. holds up a bottle of scotch.
-J.D. (CONT'D)I’m just going to get her a little tipsy and distracted and before Nessie knows what’s going on – boom! Surprise!
+J.D. (CONT'D)I'm just going to get her a little tipsy and distracted and before Nessie knows what's going on - boom! Surprise!
 Chupa steps into the frame. Chirps.
-
-24.
-J.D. (CONT'D)Yes, it’s on the record that you don’t think this is a good idea.
+J.D. (CONT'D)Yes, it's on the record that you don't think this is a good idea.
 More chirping.
-J.D. (CONT'D)Don’t you see? The fact that she’s an alcoholic is what makes this the perfect plan. She won’t be able to resist! And then we can do our devilish dirty work.
+J.D. (CONT'D)Don't you see? The fact that she's an alcoholic is what makes this the perfect plan. She won't be able to resist! And then we can do our devilish dirty work.
 J.D. whips out his cell phone.
-J.D. (CONT'D)Hello. Yes, I'd like to purchase all of your scotch.(pauses)All you have. Every drop.(takes out a credit card)The name on the card is Big E. Foot...
+J.D. (CONT'D)Hello. Yes, I'd like to purchase all of your scotch.(pauses)All you have. Every drop.(takes out a credit card)The name on the card is Big E. Foot...
 INT. BIGGIE'S HOUSE - DEN - DAY (TESTIMONIAL)
 Brad doesn't look like he's had much sleep since he moved in.
-BRADBiggie constantly wants to hang out. And it always involves food. Like... like he’s fattening me up. Like I’m a turkey and it’s almost Thanksgiving...
+BRADBiggie constantly wants to hang out. And it always involves food. Like... like he's fattening me up. Like I'm a turkey and it's almost Thanksgiving...
 LIVING ROOM (TESTIMONIAL)
 Biggie talks to the camera.
 BIGGIETonight's Nessie's surprise party. It's the perfect opportunity to introduce Brad to my fellow monsters. They're gonna love him, I just know it.
-INT. BRAD’S ROOM - DAY
-Brad’s on his computer. Looking up alleged photos and images of Bigfoot/Sasquatch. 
-
-25.
+INT. BRAD'S ROOM - DAY
+Brad's on his computer. Looking up alleged photos and images of Bigfoot/Sasquatch. 
 Depictions of the creature MASSACRING PEOPLE, DRINKING THEIR BLOOD, DEVOURING THEIR LIMBS.
 Text accompanies the pictures: "inhuman strength... insatiable appetite... man eater..."
 Brad stares at that last phrase... "man eater..."
@@ -635,18 +572,16 @@ INT. LIVING ROOM - DAY
 Brad slinks into the room, apprehensive. 
 BIGGIE I put out some snacks. Help yourself.
 On the coffee table is a smorgasbord of food. Almost exclusively meat products.
-Brad stands there frozen. Images of Bigfoot’s massacres race through his mind.
+Brad stands there frozen. Images of Bigfoot's massacres race through his mind.
 "Man eater..."
-BIGGIE (CONT'D)Bro, would you fetch us some brews from the garage? I’ll take 30 cans of IPA. Grab whatever you want for yourself.
+BIGGIE (CONT'D)Bro, would you fetch us some brews from the garage? I'll take 30 cans of IPA. Grab whatever you want for yourself.
 Brad eyes the door to the garage. An escape? Or a trap?
-
-26.
 GARAGE
-Brad braces himself against the door. He’s hyperventilating. He’s next to the refrigerator, but steps past it. He sees light underneath another door...
+Brad braces himself against the door. He's hyperventilating. He's next to the refrigerator, but steps past it. He sees light underneath another door...
 STORAGE ROOM
 Brad opens the door. CREEEAAAAK...
-If Brad thought what he witnessed before was the stuff of nightmares, well, he’s in for a real treat...
-CARCASSES strung up everywhere. Deer. Pig. Horse. Unknown. Jars with swimming EYEBALLS. BRAINS on shelves.  POOLS of blood on the floor.
+If Brad thought what he witnessed before was the stuff of nightmares, well, he's in for a real treat...
+CARCASSES strung up everywhere. Deer. Pig. Horse. Unknown. Jars with swimming EYEBALLS. BRAINS on shelves. POOLS of blood on the floor.
 Brad reacts the most reasonable way he knows how. He SCREAMS his head off.
 LIVING ROOM
 Biggie stiffens at the sound of Brad's screams.
@@ -660,24 +595,20 @@ BIGGIEHey bro, you going on a beer run?
 BRADOh god! Someone help me!
 Brad fumbles with his keys. Drops them. Falls to his knees, tries to scoop them up --
 But Biggie grabs the keys first.
-
-27.
 BIGGIEAlright, let's get that beer. And we should pick up some cheese. You look like a man who could use some cheese, Brad.
 Brad looks like a man who believes he's about to die.
 EXT. NESSIE'S MANSION - BACKYARD - DAY
-Nessie in her pool, wrapped in the massive tarp.  She is shaking and seems delirious. She hears something.
+Nessie in her pool, wrapped in the massive tarp. She is shaking and seems delirious. She hears something.
 NESSIEWho goes there? Show der self!
 J.D. steps into the yard. Pushes a wheelbarrow loaded with a barrel of scotch.
 J.D.Hey, big girl! I heard you're feeling a bit rough, so I thought you could use a drink.
-NESSIEAre ye for real? The lassie been seeing all ‘orts of things.
+NESSIEAre ye for real? The lassie been seeing all 'orts of things.
 J.D.It's me in the flesh. I come bearing gifts of scotch.
-NESSIEScotch? Well, twist me flipper. Why didn’t ye say so?
+NESSIEScotch? Well, twist me flipper. Why didn't ye say so?
 Nessie lurches forward and chomps down on the barrel. Takes down the contents in one gulp.
-NESSIE (CONT'D)Now there's a good lad.
+NESSIE (CONT'D)Now there's a good lad.
 J.D.(cups his hand, yells)Chups, back up the truck. Our girl is thirsty!
 NESSIEThere's a good lad.
-
-28.
 EXT. LOS ANGELES - 405 - DAY
 Sped up footage. Vehicles clog the expressway. Daylight fades as the car lights flicker on and dot the highway.
 EXT. NESSIE'S MANSION - POOL - NIGHT
@@ -692,8 +623,6 @@ J.D. and Chupa exchange looks. Nod.
 EXT. NESSIE'S MANSION - BACKYARD - NIGHT (TESTIMONIAL)
 J.D. speaks to the camera.
 J.D.It was touch and go there for a bit, my man Chups and I were up to the challenge. I have to credit Sphinx with an assist as well.
-
-29.
 INT. NESSIE'S MANSION - LIVING ROOM - AN HOUR EARLIER
 Sphinx puts up the decorations.
 BACKYARD
@@ -706,21 +635,19 @@ In the background we see Nessie continue to snooze.
 EXT. NESSIE'S MANSION - ENTRYWAY - NIGHT
 A BLOB MONSTER is the first guest to arrive. It rings the doorbell. Sphinx opens the door.
 BLOB MONSTERI'm here for the surprise par-tay.
-SPHINXBefore I grant you access. Riddleme this: There is a house. One enters it blind and comes out seeing. What is it?
+SPHINXBefore I grant you access. Riddle me this: There is a house. One enters it blind and comes out seeing. What is it?
 BLOB MONSTERHmm... is it blob?
 Sphinx breathes FIRE. Totally incinerates the Blob Monster. All that remains are ashes.
 J.D. appears at the doorway next to Sphinx. Clocks what just happened.
 J.D.What did you do?! Blobbie owes me fifty bucks! Why do you think I invited him? For the lively conversation?!
-
-30.
 Sphinx whimpers.
-J.D. (CONT'D)Do me a favor and don't get thedoor anymore. Your riddles are a real buzzkill.
+J.D. (CONT'D)Do me a favor and don't get the door anymore. Your riddles are a real buzzkill.
 Sphinx pads away. J.D. shuts the door.
 EXT. BIGGIE'S HOUSE - YARD - NIGHT (TESTIMONIAL)
 Biggie dressed up in fancier clothes.
 BIGGIEHonestly, I'm feeling a bit nervous. I just went everything to go well, you know? I want them to like Brad and Brad to like them...
 Biggie rubs his stomach. Lets out a little giggle.
-BIGGIE (CONT'D)Ohh, I feel butterflies! I haven't felt this way since... that one time I ate a whole colony of butterflies.
+BIGGIE (CONT'D)Ohh, I feel butterflies! I haven't felt this way since... that one time I ate a whole colony of butterflies.
 ANOTHER PART OF THE YARD (TESTIMONIAL)
 Brad addresses the camera. A man condemned.
 BRADI feel like we're going to the Last Supper. And I'm the supper.
@@ -729,17 +656,15 @@ The monster mash is in full swing. We see A-list monsters - vampires, Frankenste
 KITCHEN
 Assortment of monsters gathered around the kitchen table where a mini bar and food has been set up.
 JACK FROST, a six-foot tall monster made completely out of ice, shovels chips and salsa into his mouth.
-
-31.
 His wife, LADY FROST, a woman in the form of ice, observes Jack with a look of disapproval.
-LADY FROSTYou know you're not supposed to beeating that.
-JACK FROST(mouth full)A little bit won’t hurt me.
+LADY FROSTYou know you're not supposed to be eating that.
+JACK FROST(mouth full)A little bit won't hurt me.
 LADY FROSTBut it has peppers... you know what that does to you...
 Jack Frost shrugs. Gorges on more chips and salsa.
 DEN
 Two SNOBBISH ZOMBIES critique the decorations.
-SNOBBISH ZOMBIE 1Don’t you think these decorations might be a bit... on the nose? I mean, Nessie is a direct descendant of the dinosaurs.
-SNOBBISH ZOMBIE 2That’s what makes it so clever! I find it to be cool in an ironic, hipster sort of way.
+SNOBBISH ZOMBIE 1Don't you think these decorations might be a bit... on the nose? I mean, Nessie is a direct descendant of the dinosaurs.
+SNOBBISH ZOMBIE 2That's what makes it so clever! I find it to be cool in an ironic, hipster sort of way.
 They continue to contemplate this.
 BACKYARD
 D.J. J.D. spins the hits. Various monsters dance. Nessie is still out cold.
@@ -747,12 +672,10 @@ LIVING ROOM
 Biggie and Brad enter. Biggie pauses to make his grand introduction. Except no one notices. Biggie clears his throat. Still no one clocks them.
 Biggie bellows out --
 BIGGIEHEY EVERYONE! MEET MY NEW HUMAN FRIEND, BRAD!
-
-32.
 A classic record scratch moment. The entire room goes silent. Gapes at this human standing before them.
 Brad is just as shocked as the monsters. He's never so many of these things in one place.
 No one makes a sound for several agonizing seconds.
-BIGGIE (CONT'D)He's also my roommate.
+BIGGIE (CONT'D)He's also my roommate.
 A witch falls over. Either fainted or dead.
 FRONT YARD (TESTIMONIAL)
 Biggie still in good spirits.
@@ -760,10 +683,8 @@ BIGGIEThat could've went better, yeah. But once everyone gets used to having a h
 DEN
 Biggie strolls in to snatch a couple beers. MOTHMAN, a seven-foot tall moth/man hybrid with red eyes, approaches Biggie.
 MOTHMANGood to see you, Biggie. I have some property investments you might be interested in. Real high off the ground. We should find some time to discuss.
-BIGGIESure. Let’s meet for coffee or nectar soon.
-MOTHMANAbout your roommate. You can't trust humans. They're always leaving lights on. It’s like they are purposely trying to confuse us. Lead us astray from the path of the true light.
-
-33.
+BIGGIESure. Let's meet for coffee or nectar soon.
+MOTHMANAbout your roommate. You can't trust humans. They're always leaving lights on. It's like they are purposely trying to confuse us. Lead us astray from the path of the true light.
 BIGGIEBrad's been pretty good about shutting off the lights when he leaves a room.
 MOTHMANI warn you, Biggie. I see terrible things in your future. Terrible things...
 Mothman's eyes glow red. This convo is getting weird.
@@ -772,17 +693,15 @@ KITCHEN
 Jack Frost is hunched over. Groans in discomfort. Streams of water flow from his forehead.
 JACK FROSTI don't feel so good.
 Lady Frost feels his forehead.
-LADY FROSTYou're burning up! I told younot to eat that salsa!
+LADY FROSTYou're burning up! I told you not to eat that salsa!
 She grabs a wash cloth, drapes it over his forehead.
-LADY FROST (CONT'D)You better go lay down for a bit.
+LADY FROST (CONT'D)You better go lay down for a bit.
 Jack Frost groans. They move off.
 BACKYARD
 J.D. works the turntable. Chupa bolts up to him, frantic.
 J.D.I'm not taking any requests.
 Chupa squawks and gestures wildly.
-J.D. (CONT'D)He did what?!
-
-34.
+J.D. (CONT'D)He did what?!
 LIVING ROOM
 Brad is practically glued to the wall. He's sweaty, wide-eyed, alert to where the death blow might come from.
 Biggie hands him a beer.
@@ -790,7 +709,7 @@ BIGGIEBro, I didn't take you for the shy type. Relax. I promise no one is judgin
 The other monsters keep their distance from this strange human. Glower at Brad.
 J.D. (O.S.)Um, Biggie...
 Biggie spins around. J.D. has appeared at his side.
-J.D. (CONT'D)I'd like a word, please.
+J.D. (CONT'D)I'd like a word, please.
 DEN
 J.D. paces in front of Biggie, furious. Biggie has his arms folded, obstinate.
 BIGGIEI didn't know I had to get your permission.
@@ -798,8 +717,6 @@ J.D.Monsters and humans don't mix! At least not in domestic co-habitation situat
 BIGGIEThis is ironic coming from a demon who had umpteen surgeries to look like a human.
 J.D.It's for my careers, you know that! How could you not realize what this would do to Chupa, Ness and I? To our sacred, monster-only bond? We're the fearsome foursome!
 BIGGIEWe've never once called ourselves that.
-
-35.
 J.D.And now we'll never be able to, thanks to you!
 BIGGIEBrad is part of my world now. You're just going to have to accept that.
 With that, Biggie moves off. J.D. shakes his fists.
@@ -807,7 +724,7 @@ J.D.This isn't over, Biggie! And where are those damn nymphs?!
 KITCHEN
 MEDUSA, the famed Greek monster with hair made of snakes, dips into the ice bucket. It's empty. 
 She faces the wall as a courtesy so as to not turn her friends into stone. One of her snake HEADS turns to Sphinx.
-MEDUSA SNAKE HEADSssssphinxxxx... you're out oficccccceeeee.....
+MEDUSA SNAKE HEADSssssphinxxxx... you're out of iccccceeeee.....
 Sphinx slaps his head with his paw.
 SPHINXOh no, I forgot to pick some up. J.D. is going to murder me. 
 Sphinx trots off into the
@@ -817,8 +734,6 @@ BEDROOM
 Where there is a big block of ice lying on the bed. What luck!
 KITCHEN
 Sphinx chops up the block of ice with a knife and hammer. Tosses chunks into the ice bucket. Puts a few cubes in Medusa's drink.
-
-36.
 MEDUSA SNAKE HEADTtttthankkssssss.....
 BACKYARD
 Nessie remains passed out in the pool. A few creatures wheel out a massive dino-sized birthday cake.
@@ -826,7 +741,7 @@ J.D. pauses the tunes. Speaks into a mic.
 J.D.Alright everybody! Get your monster asses out to the pool! We got a birthday gal to celebrate! And I do mean monster-only asses. No human asses allowed!
 KITCHEN
 The creatures start to exit. Lady Frost rushes in, concerned.
-LADY FROSTHas anyone seen my husband? He wasin the bedroom, but now I can't find him anywhere.
+LADY FROSTHas anyone seen my husband? He was in the bedroom, but now I can't find him anywhere.
 Sphinx looks at the bucket overflowing with ice. Then back at Lady Frost. Ohhh shittt. He slowly slips out the room.
 LIVING ROOM
 Biggie and Brad notice that other partygoers are emptying out into the pool area.
@@ -834,8 +749,6 @@ Brad seizes Biggie's arm.
 BRADI bet I don't taste good. You ever think of that? I'm mostly skin and bones. Look at me.
 BIGGIE(Huh?)Uh, good to know, buddy. Thanks for confiding in me.
 Biggie wraps his big arms around Brad. Marches him out of the room.
-
-37.
 BACKYARD
 Nearly all of the monster mashers have assembled around the pool. Nessie remains dead to the world. Biggie and Brad join the assembly.
 J.D. switches the music to the HAPPY BIRTHDAY SONG. Cranks it to an ear-splitting level. Monsters cover their ears, ear parts, head holes.
@@ -857,8 +770,6 @@ BEHIND A BUSH
 Brad hides. He's trembling and is covered with monster goo.
 Biggie steps in front of him.
 BIGGIEThere you are!
-
-38.
 BRAD(weak)Please... please... don't eat me. 
 BIGGIE(guffaws)Eat you? Is that what you thought? No wonder you've been acting so strange tonight!
 BRADYou're not going to... eat me?
@@ -866,15 +777,13 @@ BIGGIENo! No one is going to eat you! Look, a lot creatures did get eaten tonigh
 BRADYeah, I guess that's true.
 BIGGIEOf course it is! I promise to never eat you. Or let anyone else eat you. Unless... you're behind on rent.
 Biggie laughs. Slaps Brad on the back, the force of which sends Brad flying.
-BIGGIE (CONT'D)I'm kidding!
+BIGGIE (CONT'D)I'm kidding!
 EXT. BIGGIE'S HOUSE - YARD - NIGHT (TESTIMONIAL)
 Brad, still drenched in monster guts, talks to the camera.
 BRADMy internship is unpaid, and I have tons of student debt. It's either live with Biggie or live out of my car. Plus, he said I'd never be breakfast, lunch, dinner or even a snack... so... that's good, right?
 Brad looks back the house, uncertain.
 EXT. NESSIE'S MANSION - BACKYARD - NIGHT (TESTIMONIAL)
 J.D. packing up his equipment. He flashes a devilish grin.
-
-39.
 J.D.Told you no one can throw a party like a demon.
 A dead monster SPLATS onto his turntable.
 TAG
@@ -883,17 +792,14 @@ From high above, the city spread out in front of us.
 NARRATOR (V.O.)This season on The Real Monsters of Hollywood... some monsters will seek help...
 --Nessie at an A.A. meeting. She chugs down several gallons of coffee. Burps. The other attendees gawk at her.
 --Chupa in a psychiatrist's office. The lizard creature is in the midst of a Rorschach test. For him, all of the ink spots are coming up goat.
-NARRATOR (V.O.) (CONT'D)Others will find just what they are looking for...
+NARRATOR (V.O.) (CONT'D)Others will find just what they are looking for...
 --J.D. on the catwalk in a fashion show. Pushes another model out of the way so he can hog the spotlight.
 --BETTY THE YETI, a female Sasquatch from the Himalayas, rings Biggie's door. Biggie opens.
 BETTY THE YETIHi, are you Biggie? J.D. told me you were looking for a roommate. 
 Biggie gulps. Looks over at Brad.
 NARRATOR (V.O.)And Matt Moneymaker just won't quit..
 --A surveillance van parked outside Biggie's house. Matt Moneymaker is inside, hunched over a monitor. Spying...
-END TAG
- 
-
-`;
+END TAG`;
 
 
 // =============================================
@@ -901,123 +807,191 @@ END TAG
 // =============================================
 
 export async function POST(req) {
-  const { messages, userId, chatId, senderName } = await req.json();
+  try {
+    const { messages, userId, chatId, senderName } = await req.json();
 
-  // Load chat info (we need the title to anchor Ted to the right phase)
-  let resolvedChatTitle = null;
-  if (chatId) {
-    const { data: chatInfo } = await supabase
-      .from("chats")
-      .select("title, category")
-      .eq("id", chatId)
-      .single();
-    if (chatInfo) {
-      resolvedChatTitle = chatInfo.title;
+    // --- Load chat info ---
+    let resolvedChatTitle = null;
+    if (chatId) {
+      const { data: chatInfo } = await supabase
+        .from("chats")
+        .select("title, category")
+        .eq("id", chatId)
+        .single();
+      if (chatInfo) {
+        resolvedChatTitle = chatInfo.title;
+      }
     }
-  }
 
-  // Filter out empty messages (corrupted assistant messages from past failures
-  // would otherwise cause Anthropic API to reject the entire request)
-  const cleanMessages = messages.filter(
-    (msg) => msg.content && msg.content.trim().length > 0
-  );
+    // --- Clean messages ---
+    // 1. Remove empty/null content
+    const cleanMessages = (messages || []).filter(
+      (msg) => msg.content && msg.content.trim().length > 0
+    );
 
-  // Format user messages with sender name prepended
-  // This is what lets Ted know who's talking
-  const formattedMessages = cleanMessages.map((msg) => {
-    if (msg.role === "user" && msg.senderName) {
+    // 2. Merge consecutive same-role messages (Claude API requires alternating roles)
+    // This prevents crashes when multiple user messages were saved without an assistant
+    // response between them (e.g. from earlier failed requests)
+    const mergedMessages = [];
+    for (const msg of cleanMessages) {
+      if (
+        mergedMessages.length > 0 &&
+        mergedMessages[mergedMessages.length - 1].role === msg.role
+      ) {
+        // Same role as previous — merge content
+        mergedMessages[mergedMessages.length - 1] = {
+          ...mergedMessages[mergedMessages.length - 1],
+          content:
+            mergedMessages[mergedMessages.length - 1].content +
+            "\n" +
+            msg.content,
+        };
+      } else {
+        mergedMessages.push({ ...msg });
+      }
+    }
+
+    // 3. Ensure conversation starts with a user message (Claude API requirement)
+    const validMessages =
+      mergedMessages.length > 0 && mergedMessages[0].role === "assistant"
+        ? mergedMessages.slice(1)
+        : mergedMessages;
+
+    // --- Format messages with sender names ---
+    const formattedMessages = validMessages.map((msg) => {
+      if (msg.role === "user" && msg.senderName) {
+        return {
+          role: "user",
+          content: `[${msg.senderName}]: ${msg.content}`,
+        };
+      }
+      // Strip any extra fields — Claude API only wants role + content
       return {
-        role: "user",
-        content: `[${msg.senderName}]: ${msg.content}`,
+        role: msg.role,
+        content: msg.content,
       };
+    });
+
+    // --- Build system prompt ---
+    const chatContext = resolvedChatTitle
+      ? `\n\n---\n\n## CURRENT CHAT\n\nYou are currently in the "${resolvedChatTitle}" chat. The team is working in this phase right now. Anchor your responses to this phase's concerns unless explicitly told otherwise.`
+      : "";
+
+    const systemPrompt =
+      STUDIO_SYSTEM_PROMPT +
+      "\n\n---\n\n## THE SCRIPT (V1 / Tracking B)\n\nBelow is the full script. Reference scenes, dialogue, and specific beats by quoting or paraphrasing.\n\n```\n" +
+      SCRIPT_TEXT +
+      "\n```" +
+      chatContext;
+
+    // --- Call Claude API ---
+    console.log("Studio chat request:", {
+      userId,
+      chatId,
+      senderName,
+      messageCount: formattedMessages.length,
+    });
+
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-opus-4-20250514",
+        max_tokens: 2000,
+        stream: true,
+        system: systemPrompt,
+        messages: formattedMessages,
+      }),
+    });
+
+    // --- Check for API errors ---
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error("Claude API error:", response.status, errorText);
+      return new Response(
+        JSON.stringify({
+          error: `Claude API returned ${response.status}`,
+          details: errorText,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        }
+      );
     }
-    return msg;
-  });
-  // Build the system prompt: V1 + script + chat-specific anchor
-  const chatContext = resolvedChatTitle
-    ? `\n\n---\n\n## CURRENT CHAT\n\nYou are currently in the "${resolvedChatTitle}" chat. The team is working in this phase right now. Anchor your responses to this phase's concerns unless explicitly told otherwise.`
-    : "";
 
-  const systemPrompt =
-    STUDIO_SYSTEM_PROMPT +
-    "\n\n---\n\n## THE SCRIPT (V1 / Tracking B)\n\nBelow is the full script. Reference scenes, dialogue, and specific beats by quoting or paraphrasing.\n\n```\n" +
-    SCRIPT_TEXT +
-    "\n```" +
-    chatContext;
+    // --- Stream response ---
+    const encoder = new TextEncoder();
 
-  // Call Claude API with streaming
-  console.log("Incoming:", { userId, chatId, senderName, messageCount: messages?.length });
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify({
-      model: "claude-opus-4-20250514",
-      max_tokens: 2000,
-      stream: true,
-      system: systemPrompt,
-      messages: formattedMessages,
-    }),
-  });
+    const stream = new ReadableStream({
+      async start(controller) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
 
-  const encoder = new TextEncoder();
-  let fullResponse = "";
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-  const stream = new ReadableStream({
-    async start(controller) {
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop() || "";
 
-      try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split("\n");
-          buffer = lines.pop() || "";
-
-          for (const line of lines) {
-            if (line.startsWith("data: ")) {
-              const data = line.slice(6);
-              if (data === "[DONE]") continue;
-              try {
-                const parsed = JSON.parse(data);
-                if (
-                  parsed.type === "content_block_delta" &&
-                  parsed.delta?.type === "text_delta"
-                ) {
-                  fullResponse += parsed.delta.text;
-                  controller.enqueue(
-                    encoder.encode(
-                      "data: " +
-                        JSON.stringify({ text: parsed.delta.text }) +
-                        "\n\n"
-                    )
-                  );
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") continue;
+                try {
+                  const parsed = JSON.parse(data);
+                  if (
+                    parsed.type === "content_block_delta" &&
+                    parsed.delta?.type === "text_delta"
+                  ) {
+                    controller.enqueue(
+                      encoder.encode(
+                        "data: " +
+                          JSON.stringify({ text: parsed.delta.text }) +
+                          "\n\n"
+                      )
+                    );
+                  }
+                } catch (parseErr) {
+                  console.error("SSE parse error:", parseErr.message, "data:", data.slice(0, 100));
                 }
-              } catch (e) {}
+              }
             }
           }
+        } catch (streamErr) {
+          console.error("Stream read error:", streamErr);
+          controller.error(streamErr);
+        } finally {
+          controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          controller.close();
         }
-      } catch (err) {
-        controller.error(err);
-      } finally {
-        controller.enqueue(encoder.encode("data: [DONE]\n\n"));
-        controller.close();
-      }
-    },
-  });
+      },
+    });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache",
-      Connection: "keep-alive",
-    },
-  });
+    return new Response(stream, {
+      headers: {
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        Connection: "keep-alive",
+      },
+    });
+  } catch (err) {
+    // Top-level catch for any unexpected errors (bad JSON, missing fields, etc.)
+    console.error("Studio chat route error:", err);
+    return new Response(
+      JSON.stringify({ error: "Internal server error", details: err.message }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+  }
 }
