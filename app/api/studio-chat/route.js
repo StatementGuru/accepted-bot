@@ -950,7 +950,7 @@ export async function POST(req) {
     },
     body: JSON.stringify({
       model: "claude-opus-4-20250514",
-      max_tokens: 2000,
+      max_tokens: 100,
       stream: true,
       system: systemPrompt,
       messages: formattedMessages,
