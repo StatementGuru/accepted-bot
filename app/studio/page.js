@@ -492,6 +492,14 @@ export default function StudioHome() {
                     msgs.map((msg, i) => {
                       const isUser = msg.role === "user";
                       const label = isUser ? (msg.senderName || "User") : "Ted";
+                      // Sender-specific colors: amber for Nived, teal for Ben,
+                      // fallback gray for any other future user
+                      let userBg = "#52525b";
+                      if (isUser && msg.senderName) {
+                        const n = msg.senderName.toLowerCase();
+                        if (n === "nived") userBg = "#f59e0b";      // amber
+                        else if (n === "ben") userBg = "#0d9488";   // teal
+                      }
                       return (
                         <div key={i} style={{ display: "flex", justifyContent: isUser ? "flex-end" : "flex-start", gap: "10px" }}>
                           <div style={{ maxWidth: "75%" }}>
@@ -501,7 +509,7 @@ export default function StudioHome() {
                             <div style={{
                               padding: "12px 16px",
                               borderRadius: isUser ? "16px 16px 4px 16px" : "16px 16px 16px 4px",
-                              background: isUser ? "#16a34a" : "#1e1e22",
+                              background: isUser ? userBg : "#1e1e22",
                               color: isUser ? "#fff" : "#d4d4d8",
                               fontSize: "14px",
                               lineHeight: "1.6",
@@ -522,9 +530,9 @@ export default function StudioHome() {
                         <div style={{ fontSize: "13px", color: "#71717a", marginBottom: "5px" }}>Ted</div>
                         <div style={{ padding: "12px 16px", borderRadius: "16px 16px 16px 4px", background: "#1e1e22", display: "flex", gap: "6px", alignItems: "center" }}>
                           <style>{`@keyframes pulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:1;transform:scale(1.1)}}`}</style>
-                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out infinite" }} />
-                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.3s infinite" }} />
-                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#22c55e", animation: "pulse 1.2s ease-in-out 0.6s infinite" }} />
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a78bfa", animation: "pulse 1.2s ease-in-out infinite" }} />
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a78bfa", animation: "pulse 1.2s ease-in-out 0.3s infinite" }} />
+                          <div style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#a78bfa", animation: "pulse 1.2s ease-in-out 0.6s infinite" }} />
                         </div>
                       </div>
                     </div>
@@ -548,14 +556,14 @@ export default function StudioHome() {
               placeholder={`Message as ${displayName}...`}
               rows={1}
               style={{ flex: 1, background: "#1e1e22", border: "1px solid #2e2e33", color: "#e4e4e7", padding: "12px 16px", borderRadius: "14px", fontSize: "14px", lineHeight: "1.5", resize: "none", outline: "none", fontFamily: "inherit", minHeight: "44px", maxHeight: "120px" }}
-              onFocus={(e) => (e.target.style.borderColor = "#22c55e")}
+              onFocus={(e) => (e.target.style.borderColor = "#a78bfa")}
               onBlur={(e) => (e.target.style.borderColor = "#2e2e33")}
               onInput={(e) => { e.target.style.height = "44px"; e.target.style.height = Math.min(e.target.scrollHeight, 120) + "px"; }}
             />
             <button
               onClick={sendMessage}
               disabled={!input.trim() || loading}
-              style={{ background: !input.trim() || loading ? "#1e1e22" : "linear-gradient(135deg, #22c55e, #16a34a)", border: "none", color: !input.trim() || loading ? "#52525b" : "#fff", width: "44px", height: "44px", borderRadius: "12px", cursor: !input.trim() || loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+              style={{ background: !input.trim() || loading ? "#1e1e22" : "linear-gradient(135deg, #a78bfa, #7c3aed)", border: "none", color: !input.trim() || loading ? "#52525b" : "#fff", width: "44px", height: "44px", borderRadius: "12px", cursor: !input.trim() || loading ? "default" : "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="22" y1="2" x2="11" y2="13" />
