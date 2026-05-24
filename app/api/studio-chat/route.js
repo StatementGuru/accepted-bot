@@ -916,9 +916,15 @@ export async function POST(req) {
     }
   }
 
+  // Filter out empty messages (corrupted assistant messages from past failures
+  // would otherwise cause Anthropic API to reject the entire request)
+  const cleanMessages = messages.filter(
+    (msg) => msg.content && msg.content.trim().length > 0
+  );
+
   // Format user messages with sender name prepended
   // This is what lets Ted know who's talking
-  const formattedMessages = messages.map((msg) => {
+  const formattedMessages = cleanMessages.map((msg) => {
     if (msg.role === "user" && msg.senderName) {
       return {
         role: "user",
@@ -927,7 +933,6 @@ export async function POST(req) {
     }
     return msg;
   });
-
   // Build the system prompt: V1 + script + chat-specific anchor
   const chatContext = resolvedChatTitle
     ? `\n\n---\n\n## CURRENT CHAT\n\nYou are currently in the "${resolvedChatTitle}" chat. The team is working in this phase right now. Anchor your responses to this phase's concerns unless explicitly told otherwise.`
