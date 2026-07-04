@@ -366,7 +366,7 @@ async function updateStudentProfile(userId, messages, assistantResponse, current
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-4-5",
         max_tokens: 1000,
         system: "You extract student profile information from conversations. Given the current profile and recent conversation, return ONLY a JSON object with updated profile fields. Keep existing fields, add new ones, update changed ones. Use these field names when relevant: name, school, grade, freshman_or_transfer, major_interest, extracurriculars, interests, stories (array of brief story descriptions), strengths, challenges, deadline, essays_started, prompts_discussed, prompt_assignments (object mapping prompt names to story descriptions), essay_statuses (object mapping prompt names to status like brainstormed/outlined/drafting/revising/final), pending_experiences (array of objects with description and timeframe). Only include fields you have information for. Return ONLY valid JSON, no explanation.",
         messages: [
